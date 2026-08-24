@@ -1,0 +1,601 @@
+genre,age,diplome,anciennete_annees,zone_postale,secteur,selection,performance_observee
+Homme,43,Licence,5.6,Sud,Tech,Non retenu,Insuffisante
+Femme,28,Master,5.3,Nord,Industrie,Retenu,Satisfaisante
+Homme,34,Master,2.9,Centre,Tech,Retenu,Insuffisante
+Femme,45,Master,8.9,Sud,Tech,Retenu,Satisfaisante
+Femme,44,Doctorat,3.2,Nord,Services,Non retenu,Insuffisante
+Femme,50,Licence,3.6,Sud,Finance,Retenu,Satisfaisante
+Femme,36,Licence,2.4,Nord,Services,Non retenu,Insuffisante
+Homme,60,Licence,3.7,Centre,Finance,Non retenu,Insuffisante
+Homme,32,Licence,6.6,Centre,Industrie,Retenu,Insuffisante
+Femme,23,Licence,10.6,Nord,Services,Retenu,Satisfaisante
+Femme,35,Licence,6.3,Centre,Finance,Retenu,Satisfaisante
+Homme,25,Master,1.9,Nord,Industrie,Non retenu,Satisfaisante
+Femme,44,Licence,6.0,Sud,Industrie,Retenu,Insuffisante
+Homme,37,Licence,7.0,Sud,Tech,Retenu,Insuffisante
+Homme,23,Licence,5.5,Ouest,Services,Retenu,Insuffisante
+Femme,39,Master,5.2,Ouest,Services,Retenu,Satisfaisante
+Homme,48,Licence,3.4,Centre,Services,Non retenu,Insuffisante
+Homme,32,Licence,4.9,Centre,Services,Retenu,Satisfaisante
+Femme,34,Licence,2.7,Nord,Industrie,Non retenu,Insuffisante
+Femme,30,Licence,3.1,Nord,Industrie,Non retenu,Insuffisante
+Femme,32,Master,3.5,Sud,Finance,Retenu,Insuffisante
+Femme,24,Licence,1.0,Nord,Tech,Non retenu,Insuffisante
+Homme,35,Licence,6.8,Nord,Services,Retenu,Insuffisante
+Femme,27,Licence,2.4,Centre,Industrie,Retenu,Satisfaisante
+Homme,39,Master,7.7,Centre,Tech,Retenu,Insuffisante
+Homme,49,Master,0.7,Ouest,Services,Retenu,Satisfaisante
+Femme,45,Master,2.4,Ouest,Tech,Retenu,Satisfaisante
+Femme,40,Doctorat,12.7,Sud,Services,Retenu,Satisfaisante
+Femme,48,Licence,1.9,Ouest,Tech,Non retenu,Insuffisante
+Homme,44,Licence,6.3,Ouest,Tech,Non retenu,Insuffisante
+Femme,32,Master,1.1,Ouest,Finance,Non retenu,Satisfaisante
+Homme,41,Licence,1.7,Ouest,Tech,Non retenu,Insuffisante
+Homme,44,Master,7.4,Nord,Finance,Non retenu,Satisfaisante
+Femme,35,Doctorat,5.7,Sud,Industrie,Retenu,Insuffisante
+Homme,43,Licence,9.9,Sud,Industrie,Non retenu,Insuffisante
+Homme,29,Master,1.5,Nord,Services,Non retenu,Insuffisante
+Homme,41,Licence,3.0,Ouest,Tech,Retenu,Insuffisante
+Femme,43,Licence,4.9,Centre,Finance,Non retenu,Insuffisante
+Homme,39,Master,2.8,Ouest,Services,Non retenu,Insuffisante
+Femme,35,Licence,4.5,Sud,Services,Retenu,Insuffisante
+Homme,40,Master,0.8,Sud,Industrie,Non retenu,Insuffisante
+Homme,29,Licence,4.4,Centre,Tech,Retenu,Insuffisante
+Femme,32,Master,2.3,Nord,Services,Non retenu,Insuffisante
+Homme,43,Licence,3.6,Ouest,Tech,Non retenu,Satisfaisante
+Femme,47,Doctorat,3.5,Nord,Tech,Non retenu,Satisfaisante
+Femme,46,Master,1.9,Nord,Tech,Non retenu,Insuffisante
+Femme,37,Doctorat,2.3,Sud,Industrie,Non retenu,Insuffisante
+Femme,42,Master,0.4,Sud,Finance,Retenu,Satisfaisante
+Homme,32,Master,5.3,Nord,Services,Retenu,Satisfaisante
+Homme,40,Master,5.9,Ouest,Services,Retenu,Satisfaisante
+Homme,32,Master,3.7,Centre,Industrie,Non retenu,Satisfaisante
+Homme,26,Master,7.7,Sud,Finance,Retenu,Insuffisante
+Homme,41,Master,7.8,Sud,Services,Non retenu,Satisfaisante
+Femme,35,Licence,3.9,Sud,Tech,Non retenu,Satisfaisante
+Homme,36,Licence,6.4,Ouest,Finance,Retenu,Insuffisante
+Homme,30,Licence,5.1,Ouest,Industrie,Retenu,Insuffisante
+Femme,53,Licence,6.4,Nord,Tech,Non retenu,Insuffisante
+Femme,42,Doctorat,7.2,Centre,Services,Retenu,Insuffisante
+Femme,30,Licence,7.0,Nord,Services,Non retenu,Insuffisante
+Femme,44,Master,5.6,Ouest,Tech,Retenu,Satisfaisante
+Femme,38,Master,3.8,Centre,Tech,Non retenu,Satisfaisante
+Femme,31,Licence,7.2,Centre,Tech,Non retenu,Insuffisante
+Femme,30,Master,2.0,Sud,Finance,Retenu,Insuffisante
+Homme,47,Doctorat,6.7,Ouest,Industrie,Retenu,Satisfaisante
+Homme,35,Licence,8.9,Ouest,Tech,Non retenu,Insuffisante
+Femme,42,Master,2.5,Ouest,Industrie,Retenu,Insuffisante
+Homme,32,Doctorat,1.1,Ouest,Industrie,Retenu,Insuffisante
+Homme,43,Licence,9.2,Ouest,Industrie,Non retenu,Insuffisante
+Femme,42,Master,6.4,Nord,Industrie,Non retenu,Satisfaisante
+Femme,43,Licence,2.2,Sud,Finance,Non retenu,Satisfaisante
+Femme,42,Licence,2.1,Nord,Services,Retenu,Insuffisante
+Homme,48,Master,3.5,Centre,Tech,Non retenu,Insuffisante
+Homme,46,Licence,2.2,Sud,Tech,Retenu,Insuffisante
+Homme,32,Master,1.2,Sud,Finance,Non retenu,Insuffisante
+Homme,54,Licence,2.8,Ouest,Tech,Non retenu,Satisfaisante
+Homme,33,Licence,5.1,Centre,Tech,Retenu,Insuffisante
+Femme,32,Doctorat,4.7,Nord,Services,Retenu,Insuffisante
+Femme,38,Licence,6.7,Nord,Tech,Retenu,Insuffisante
+Homme,46,Licence,2.4,Ouest,Tech,Non retenu,Insuffisante
+Femme,43,Master,2.4,Centre,Services,Retenu,Satisfaisante
+Femme,27,Master,11.3,Sud,Services,Retenu,Satisfaisante
+Femme,33,Licence,4.2,Sud,Finance,Retenu,Insuffisante
+Femme,47,Licence,1.0,Nord,Services,Retenu,Insuffisante
+Homme,41,Licence,10.2,Ouest,Finance,Non retenu,Satisfaisante
+Homme,40,Master,3.4,Centre,Services,Non retenu,Satisfaisante
+Femme,23,Licence,9.5,Ouest,Tech,Retenu,Satisfaisante
+Femme,38,Licence,2.2,Nord,Finance,Retenu,Satisfaisante
+Homme,41,Licence,4.0,Sud,Finance,Non retenu,Insuffisante
+Femme,28,Master,5.3,Nord,Services,Retenu,Satisfaisante
+Femme,20,Licence,17.5,Sud,Tech,Retenu,Satisfaisante
+Homme,40,Licence,4.2,Centre,Services,Non retenu,Satisfaisante
+Femme,46,Licence,7.9,Nord,Services,Retenu,Satisfaisante
+Homme,25,Licence,7.2,Centre,Finance,Retenu,Satisfaisante
+Homme,35,Licence,7.7,Sud,Industrie,Retenu,Insuffisante
+Homme,51,Master,12.6,Centre,Services,Non retenu,Satisfaisante
+Femme,54,Licence,1.6,Sud,Services,Retenu,Insuffisante
+Homme,39,Licence,0.6,Centre,Tech,Non retenu,Insuffisante
+Homme,20,Licence,4.1,Centre,Tech,Non retenu,Satisfaisante
+Femme,40,Doctorat,8.2,Ouest,Finance,Non retenu,Satisfaisante
+Homme,47,Licence,3.0,Centre,Finance,Non retenu,Insuffisante
+Homme,63,Licence,3.9,Sud,Finance,Non retenu,Insuffisante
+Femme,48,Licence,4.0,Ouest,Tech,Non retenu,Satisfaisante
+Homme,46,Licence,1.7,Sud,Tech,Retenu,Insuffisante
+Femme,36,Licence,2.2,Centre,Services,Non retenu,Insuffisante
+Homme,24,Master,3.4,Nord,Services,Retenu,Satisfaisante
+Homme,30,Master,0.1,Nord,Tech,Non retenu,Insuffisante
+Homme,30,Master,2.0,Centre,Industrie,Retenu,Insuffisante
+Femme,32,Master,14.2,Nord,Tech,Retenu,Satisfaisante
+Femme,46,Licence,3.5,Centre,Industrie,Non retenu,Insuffisante
+Homme,39,Licence,8.1,Ouest,Services,Retenu,Insuffisante
+Homme,20,Licence,1.2,Nord,Services,Retenu,Satisfaisante
+Femme,35,Licence,4.5,Nord,Tech,Retenu,Insuffisante
+Homme,50,Licence,1.0,Sud,Tech,Retenu,Satisfaisante
+Homme,46,Licence,9.5,Centre,Services,Retenu,Insuffisante
+Femme,53,Licence,3.5,Nord,Industrie,Non retenu,Insuffisante
+Homme,27,Master,0.2,Nord,Industrie,Retenu,Insuffisante
+Femme,42,Licence,4.2,Ouest,Finance,Non retenu,Insuffisante
+Femme,35,Licence,2.5,Sud,Industrie,Non retenu,Satisfaisante
+Femme,28,Licence,3.9,Nord,Finance,Retenu,Insuffisante
+Femme,31,Licence,3.1,Centre,Services,Retenu,Satisfaisante
+Homme,20,Licence,9.5,Ouest,Tech,Retenu,Satisfaisante
+Femme,22,Master,2.7,Nord,Services,Non retenu,Insuffisante
+Homme,40,Master,1.8,Sud,Services,Non retenu,Satisfaisante
+Homme,36,Licence,2.9,Ouest,Industrie,Non retenu,Insuffisante
+Homme,34,Doctorat,2.0,Centre,Industrie,Retenu,Satisfaisante
+Femme,51,Licence,7.6,Ouest,Finance,Non retenu,Satisfaisante
+Femme,34,Licence,6.4,Nord,Services,Non retenu,Satisfaisante
+Femme,44,Master,2.8,Nord,Tech,Non retenu,Insuffisante
+Femme,27,Master,2.4,Nord,Finance,Retenu,Satisfaisante
+Femme,26,Licence,3.2,Centre,Finance,Non retenu,Insuffisante
+Femme,34,Master,6.0,Centre,Services,Non retenu,Insuffisante
+Femme,32,Master,3.3,Centre,Finance,Retenu,Insuffisante
+Femme,35,Licence,0.7,Ouest,Industrie,Non retenu,Insuffisante
+Homme,38,Licence,6.7,Sud,Industrie,Non retenu,Insuffisante
+Femme,55,Licence,6.7,Sud,Services,Retenu,Satisfaisante
+Homme,29,Master,3.5,Centre,Finance,Non retenu,Satisfaisante
+Homme,25,Master,2.8,Sud,Tech,Retenu,Insuffisante
+Homme,43,Doctorat,5.4,Sud,Tech,Retenu,Insuffisante
+Homme,50,Master,2.6,Nord,Tech,Retenu,Satisfaisante
+Homme,55,Licence,4.5,Centre,Finance,Retenu,Insuffisante
+Homme,27,Doctorat,5.6,Centre,Industrie,Retenu,Satisfaisante
+Femme,43,Licence,11.1,Ouest,Services,Retenu,Insuffisante
+Homme,20,Licence,5.5,Sud,Services,Non retenu,Satisfaisante
+Homme,37,Licence,5.0,Centre,Tech,Non retenu,Insuffisante
+Homme,27,Licence,2.0,Centre,Tech,Non retenu,Insuffisante
+Femme,33,Licence,4.9,Nord,Tech,Retenu,Satisfaisante
+Homme,23,Doctorat,6.7,Ouest,Tech,Retenu,Satisfaisante
+Femme,50,Master,3.3,Centre,Industrie,Non retenu,Satisfaisante
+Homme,47,Licence,2.5,Centre,Industrie,Non retenu,Satisfaisante
+Femme,43,Licence,1.8,Centre,Industrie,Non retenu,Insuffisante
+Femme,29,Licence,1.8,Ouest,Finance,Non retenu,Insuffisante
+Femme,55,Master,7.8,Centre,Finance,Retenu,Satisfaisante
+Femme,49,Licence,3.2,Sud,Industrie,Non retenu,Insuffisante
+Homme,36,Licence,4.8,Sud,Industrie,Retenu,Insuffisante
+Homme,49,Licence,3.7,Sud,Finance,Non retenu,Insuffisante
+Homme,43,Master,6.7,Centre,Tech,Retenu,Satisfaisante
+Femme,44,Licence,3.3,Ouest,Services,Non retenu,Satisfaisante
+Homme,46,Master,5.3,Sud,Industrie,Non retenu,Satisfaisante
+Femme,46,Doctorat,16.4,Nord,Tech,Retenu,Satisfaisante
+Femme,38,Master,2.9,Nord,Services,Retenu,Insuffisante
+Femme,25,Licence,8.3,Nord,Finance,Retenu,Satisfaisante
+Homme,28,Master,4.1,Nord,Industrie,Retenu,Insuffisante
+Homme,43,Licence,3.8,Sud,Services,Retenu,Satisfaisante
+Homme,34,Licence,4.5,Centre,Finance,Non retenu,Satisfaisante
+Femme,41,Master,8.5,Nord,Finance,Retenu,Satisfaisante
+Femme,20,Master,5.8,Centre,Industrie,Retenu,Insuffisante
+Homme,34,Licence,4.2,Centre,Industrie,Retenu,Satisfaisante
+Homme,34,Doctorat,3.9,Nord,Finance,Retenu,Satisfaisante
+Homme,53,Licence,2.7,Nord,Industrie,Retenu,Satisfaisante
+Homme,35,Licence,0.9,Sud,Services,Retenu,Satisfaisante
+Homme,32,Licence,5.3,Ouest,Tech,Retenu,Insuffisante
+Homme,39,Master,4.2,Ouest,Industrie,Retenu,Satisfaisante
+Homme,50,Licence,4.2,Centre,Industrie,Retenu,Satisfaisante
+Femme,63,Master,0.8,Nord,Industrie,Non retenu,Satisfaisante
+Femme,25,Master,9.0,Centre,Services,Retenu,Insuffisante
+Femme,56,Licence,6.5,Nord,Tech,Non retenu,Insuffisante
+Femme,20,Master,0.8,Nord,Industrie,Retenu,Satisfaisante
+Femme,52,Master,7.3,Centre,Tech,Non retenu,Insuffisante
+Femme,53,Licence,1.7,Nord,Services,Non retenu,Satisfaisante
+Homme,49,Licence,3.9,Ouest,Finance,Retenu,Insuffisante
+Homme,20,Licence,5.8,Nord,Tech,Non retenu,Insuffisante
+Femme,29,Licence,8.4,Sud,Services,Non retenu,Satisfaisante
+Femme,56,Licence,1.5,Nord,Services,Non retenu,Insuffisante
+Homme,43,Licence,1.4,Ouest,Finance,Non retenu,Insuffisante
+Homme,49,Master,6.3,Ouest,Finance,Retenu,Satisfaisante
+Homme,39,Licence,2.0,Ouest,Finance,Retenu,Insuffisante
+Femme,41,Doctorat,6.7,Centre,Finance,Retenu,Satisfaisante
+Femme,42,Licence,5.8,Nord,Services,Non retenu,Satisfaisante
+Homme,32,Licence,6.8,Sud,Tech,Retenu,Insuffisante
+Homme,48,Licence,11.9,Centre,Finance,Retenu,Insuffisante
+Homme,61,Master,7.0,Nord,Tech,Retenu,Insuffisante
+Femme,27,Licence,5.8,Sud,Services,Retenu,Satisfaisante
+Homme,28,Licence,5.7,Sud,Services,Retenu,Insuffisante
+Homme,29,Licence,5.3,Centre,Finance,Non retenu,Satisfaisante
+Femme,30,Doctorat,2.1,Nord,Services,Non retenu,Satisfaisante
+Femme,40,Licence,4.4,Nord,Tech,Non retenu,Satisfaisante
+Femme,43,Doctorat,12.5,Sud,Tech,Retenu,Satisfaisante
+Homme,44,Licence,0.5,Sud,Finance,Non retenu,Satisfaisante
+Femme,41,Master,1.7,Sud,Finance,Retenu,Satisfaisante
+Homme,26,Master,12.0,Ouest,Services,Non retenu,Satisfaisante
+Homme,37,Master,7.4,Sud,Tech,Retenu,Satisfaisante
+Homme,28,Master,1.3,Centre,Finance,Retenu,Satisfaisante
+Femme,37,Master,3.4,Sud,Tech,Retenu,Insuffisante
+Femme,43,Master,2.1,Centre,Finance,Non retenu,Insuffisante
+Homme,39,Licence,4.2,Nord,Services,Non retenu,Insuffisante
+Homme,51,Licence,9.3,Nord,Services,Retenu,Satisfaisante
+Homme,39,Master,12.6,Nord,Industrie,Non retenu,Satisfaisante
+Homme,49,Licence,4.5,Centre,Tech,Non retenu,Insuffisante
+Homme,64,Master,3.7,Sud,Tech,Retenu,Satisfaisante
+Femme,46,Licence,0.9,Ouest,Services,Retenu,Satisfaisante
+Homme,23,Master,6.2,Sud,Industrie,Retenu,Satisfaisante
+Femme,26,Licence,3.3,Ouest,Industrie,Retenu,Satisfaisante
+Homme,37,Master,1.2,Centre,Tech,Non retenu,Insuffisante
+Homme,46,Master,4.9,Sud,Services,Retenu,Satisfaisante
+Femme,34,Licence,3.7,Centre,Services,Non retenu,Satisfaisante
+Femme,44,Licence,0.6,Nord,Tech,Non retenu,Insuffisante
+Femme,34,Licence,7.3,Centre,Finance,Non retenu,Satisfaisante
+Homme,35,Licence,0.7,Centre,Services,Retenu,Insuffisante
+Femme,36,Master,7.9,Ouest,Services,Retenu,Satisfaisante
+Femme,58,Master,1.9,Ouest,Industrie,Retenu,Insuffisante
+Homme,48,Licence,8.9,Sud,Finance,Retenu,Satisfaisante
+Femme,24,Doctorat,1.7,Centre,Industrie,Non retenu,Satisfaisante
+Femme,37,Licence,0.8,Nord,Finance,Non retenu,Insuffisante
+Femme,55,Master,5.5,Nord,Industrie,Retenu,Satisfaisante
+Femme,39,Licence,5.5,Nord,Finance,Non retenu,Insuffisante
+Femme,61,Master,4.1,Nord,Finance,Retenu,Satisfaisante
+Femme,41,Licence,5.3,Nord,Tech,Retenu,Satisfaisante
+Femme,41,Master,1.0,Nord,Industrie,Retenu,Satisfaisante
+Femme,35,Licence,10.3,Nord,Industrie,Retenu,Satisfaisante
+Femme,36,Master,6.1,Nord,Tech,Retenu,Satisfaisante
+Homme,37,Licence,7.7,Ouest,Industrie,Non retenu,Insuffisante
+Homme,44,Doctorat,1.9,Centre,Finance,Retenu,Satisfaisante
+Femme,50,Licence,6.9,Nord,Finance,Non retenu,Satisfaisante
+Femme,35,Licence,8.0,Sud,Finance,Retenu,Satisfaisante
+Homme,44,Doctorat,7.3,Nord,Services,Retenu,Satisfaisante
+Homme,26,Master,5.1,Centre,Tech,Retenu,Insuffisante
+Homme,39,Licence,8.0,Centre,Services,Retenu,Satisfaisante
+Femme,44,Licence,2.8,Centre,Tech,Non retenu,Insuffisante
+Femme,38,Licence,2.7,Nord,Industrie,Retenu,Satisfaisante
+Femme,31,Doctorat,10.7,Sud,Finance,Retenu,Satisfaisante
+Femme,44,Licence,1.7,Nord,Services,Retenu,Satisfaisante
+Femme,49,Licence,2.7,Ouest,Tech,Retenu,Insuffisante
+Femme,51,Master,2.2,Centre,Finance,Non retenu,Insuffisante
+Femme,44,Licence,0.5,Nord,Tech,Non retenu,Insuffisante
+Femme,56,Licence,4.6,Nord,Finance,Retenu,Insuffisante
+Homme,36,Master,5.6,Centre,Tech,Retenu,Satisfaisante
+Homme,44,Doctorat,1.9,Ouest,Industrie,Retenu,Satisfaisante
+Femme,23,Master,2.6,Sud,Industrie,Retenu,Satisfaisante
+Homme,38,Master,2.2,Centre,Industrie,Retenu,Satisfaisante
+Homme,39,Licence,1.4,Centre,Services,Non retenu,Satisfaisante
+Homme,60,Licence,5.0,Sud,Services,Retenu,Satisfaisante
+Femme,51,Licence,6.0,Nord,Industrie,Retenu,Satisfaisante
+Femme,50,Licence,4.9,Centre,Finance,Retenu,Satisfaisante
+Homme,29,Licence,2.1,Sud,Tech,Retenu,Satisfaisante
+Femme,35,Licence,2.3,Nord,Tech,Non retenu,Insuffisante
+Homme,40,Licence,0.4,Ouest,Services,Non retenu,Insuffisante
+Femme,26,Master,1.8,Nord,Services,Retenu,Satisfaisante
+Homme,34,Licence,6.9,Centre,Industrie,Retenu,Insuffisante
+Homme,46,Licence,4.4,Centre,Services,Non retenu,Insuffisante
+Homme,38,Master,2.6,Centre,Finance,Retenu,Satisfaisante
+Femme,29,Master,3.3,Ouest,Tech,Non retenu,Satisfaisante
+Femme,57,Master,6.8,Centre,Finance,Non retenu,Satisfaisante
+Femme,43,Licence,3.3,Centre,Industrie,Retenu,Insuffisante
+Homme,38,Master,1.9,Nord,Services,Non retenu,Insuffisante
+Femme,25,Licence,7.4,Nord,Services,Non retenu,Insuffisante
+Homme,47,Licence,1.8,Nord,Tech,Non retenu,Satisfaisante
+Homme,36,Licence,4.2,Ouest,Industrie,Non retenu,Satisfaisante
+Femme,34,Master,1.9,Ouest,Finance,Non retenu,Insuffisante
+Homme,32,Master,4.0,Centre,Tech,Retenu,Insuffisante
+Femme,51,Master,1.5,Nord,Tech,Retenu,Satisfaisante
+Homme,20,Licence,6.2,Sud,Tech,Non retenu,Insuffisante
+Femme,28,Master,6.1,Sud,Services,Non retenu,Insuffisante
+Homme,46,Licence,2.7,Ouest,Industrie,Non retenu,Insuffisante
+Femme,42,Doctorat,7.1,Ouest,Tech,Retenu,Insuffisante
+Homme,43,Master,2.0,Sud,Services,Retenu,Satisfaisante
+Homme,35,Licence,1.8,Ouest,Industrie,Non retenu,Insuffisante
+Femme,43,Licence,5.1,Ouest,Finance,Retenu,Insuffisante
+Femme,31,Master,3.1,Centre,Finance,Retenu,Insuffisante
+Homme,32,Licence,4.5,Centre,Tech,Retenu,Insuffisante
+Femme,36,Licence,0.9,Centre,Tech,Non retenu,Satisfaisante
+Homme,33,Licence,3.5,Sud,Industrie,Non retenu,Insuffisante
+Femme,43,Doctorat,5.3,Nord,Tech,Retenu,Satisfaisante
+Femme,38,Licence,1.7,Nord,Tech,Retenu,Insuffisante
+Homme,31,Licence,1.6,Sud,Services,Non retenu,Insuffisante
+Femme,26,Master,1.4,Nord,Finance,Non retenu,Satisfaisante
+Femme,56,Licence,14.5,Nord,Tech,Retenu,Satisfaisante
+Femme,28,Master,4.6,Nord,Finance,Retenu,Insuffisante
+Homme,39,Licence,4.0,Sud,Tech,Non retenu,Insuffisante
+Homme,24,Licence,1.0,Nord,Finance,Non retenu,Satisfaisante
+Homme,26,Master,3.6,Ouest,Services,Retenu,Insuffisante
+Femme,41,Licence,12.9,Nord,Tech,Retenu,Satisfaisante
+Homme,54,Master,4.7,Centre,Tech,Non retenu,Insuffisante
+Femme,54,Licence,5.5,Sud,Finance,Non retenu,Insuffisante
+Femme,34,Doctorat,3.5,Nord,Services,Retenu,Satisfaisante
+Homme,29,Master,1.3,Centre,Industrie,Retenu,Insuffisante
+Femme,46,Master,3.2,Ouest,Tech,Non retenu,Satisfaisante
+Homme,52,Licence,2.8,Nord,Services,Non retenu,Insuffisante
+Homme,30,Licence,3.9,Centre,Tech,Non retenu,Insuffisante
+Homme,31,Master,1.8,Sud,Services,Retenu,Satisfaisante
+Femme,53,Licence,11.1,Nord,Services,Retenu,Satisfaisante
+Homme,30,Master,3.2,Ouest,Industrie,Retenu,Satisfaisante
+Femme,47,Licence,9.9,Sud,Finance,Retenu,Satisfaisante
+Homme,31,Licence,4.3,Nord,Services,Retenu,Insuffisante
+Homme,42,Master,6.0,Sud,Services,Retenu,Insuffisante
+Homme,25,Master,2.3,Ouest,Tech,Non retenu,Satisfaisante
+Femme,43,Licence,0.8,Nord,Industrie,Non retenu,Satisfaisante
+Homme,28,Licence,1.3,Nord,Industrie,Retenu,Insuffisante
+Femme,26,Licence,6.3,Nord,Finance,Non retenu,Insuffisante
+Homme,33,Master,1.9,Sud,Tech,Retenu,Satisfaisante
+Homme,51,Master,4.7,Ouest,Finance,Retenu,Satisfaisante
+Homme,41,Licence,6.0,Ouest,Finance,Retenu,Insuffisante
+Femme,39,Master,2.9,Ouest,Tech,Retenu,Insuffisante
+Homme,46,Master,4.4,Ouest,Industrie,Non retenu,Satisfaisante
+Femme,32,Master,6.8,Nord,Industrie,Retenu,Satisfaisante
+Femme,49,Master,2.3,Nord,Tech,Retenu,Satisfaisante
+Femme,25,Licence,2.1,Centre,Tech,Non retenu,Insuffisante
+Femme,58,Master,1.8,Nord,Services,Retenu,Insuffisante
+Homme,43,Licence,6.3,Ouest,Finance,Non retenu,Insuffisante
+Homme,40,Licence,3.8,Ouest,Tech,Retenu,Satisfaisante
+Femme,20,Master,4.0,Nord,Industrie,Non retenu,Satisfaisante
+Femme,38,Master,2.7,Nord,Services,Retenu,Satisfaisante
+Homme,38,Licence,3.7,Ouest,Tech,Retenu,Insuffisante
+Femme,45,Master,2.5,Centre,Services,Non retenu,Satisfaisante
+Femme,27,Master,7.5,Ouest,Tech,Retenu,Satisfaisante
+Homme,55,Doctorat,4.0,Ouest,Services,Non retenu,Satisfaisante
+Homme,37,Licence,0.6,Sud,Industrie,Non retenu,Satisfaisante
+Homme,42,Master,1.9,Nord,Industrie,Retenu,Satisfaisante
+Homme,33,Licence,5.4,Centre,Industrie,Non retenu,Satisfaisante
+Femme,63,Licence,4.4,Nord,Industrie,Non retenu,Satisfaisante
+Femme,33,Licence,3.4,Ouest,Tech,Non retenu,Insuffisante
+Femme,40,Master,6.9,Ouest,Finance,Retenu,Satisfaisante
+Femme,48,Master,13.0,Nord,Services,Retenu,Satisfaisante
+Femme,62,Licence,4.3,Nord,Finance,Non retenu,Insuffisante
+Homme,39,Licence,1.4,Centre,Industrie,Non retenu,Insuffisante
+Femme,34,Licence,4.8,Nord,Services,Non retenu,Insuffisante
+Homme,36,Master,1.9,Nord,Services,Non retenu,Satisfaisante
+Homme,39,Licence,3.1,Sud,Industrie,Retenu,Insuffisante
+Homme,45,Licence,2.5,Nord,Tech,Retenu,Satisfaisante
+Femme,39,Licence,0.8,Ouest,Finance,Non retenu,Insuffisante
+Femme,28,Master,0.7,Nord,Services,Retenu,Insuffisante
+Femme,39,Licence,10.0,Centre,Finance,Retenu,Satisfaisante
+Femme,40,Master,7.8,Centre,Industrie,Non retenu,Insuffisante
+Femme,33,Master,5.4,Ouest,Finance,Retenu,Satisfaisante
+Femme,48,Licence,1.9,Nord,Tech,Retenu,Insuffisante
+Femme,52,Master,5.4,Ouest,Tech,Non retenu,Insuffisante
+Femme,20,Master,10.3,Sud,Tech,Retenu,Insuffisante
+Homme,45,Licence,4.0,Centre,Industrie,Retenu,Satisfaisante
+Femme,45,Master,3.4,Nord,Tech,Non retenu,Insuffisante
+Femme,54,Licence,4.2,Nord,Finance,Retenu,Insuffisante
+Femme,47,Licence,4.0,Ouest,Tech,Retenu,Insuffisante
+Homme,55,Master,5.7,Nord,Services,Non retenu,Satisfaisante
+Homme,50,Licence,3.7,Nord,Industrie,Retenu,Insuffisante
+Homme,29,Master,3.8,Nord,Finance,Non retenu,Satisfaisante
+Homme,34,Licence,2.6,Sud,Tech,Non retenu,Satisfaisante
+Femme,32,Licence,6.7,Sud,Finance,Retenu,Insuffisante
+Homme,45,Master,7.2,Centre,Tech,Retenu,Satisfaisante
+Homme,35,Master,6.3,Centre,Services,Retenu,Satisfaisante
+Femme,29,Master,8.4,Nord,Tech,Non retenu,Satisfaisante
+Femme,44,Licence,8.1,Ouest,Tech,Retenu,Satisfaisante
+Femme,53,Master,12.0,Nord,Industrie,Non retenu,Insuffisante
+Femme,39,Master,2.3,Centre,Services,Retenu,Satisfaisante
+Homme,33,Licence,4.2,Ouest,Tech,Non retenu,Satisfaisante
+Homme,31,Licence,3.5,Nord,Services,Retenu,Insuffisante
+Homme,37,Licence,6.1,Ouest,Tech,Non retenu,Insuffisante
+Femme,39,Licence,5.4,Sud,Tech,Non retenu,Insuffisante
+Homme,41,Master,2.8,Ouest,Services,Retenu,Insuffisante
+Homme,46,Licence,5.9,Ouest,Finance,Retenu,Satisfaisante
+Femme,40,Master,2.6,Ouest,Tech,Non retenu,Insuffisante
+Femme,20,Licence,4.4,Nord,Industrie,Retenu,Satisfaisante
+Homme,49,Licence,2.0,Centre,Tech,Retenu,Insuffisante
+Femme,64,Licence,7.8,Sud,Industrie,Retenu,Insuffisante
+Homme,30,Master,4.9,Sud,Tech,Retenu,Satisfaisante
+Homme,25,Licence,6.1,Nord,Finance,Non retenu,Insuffisante
+Homme,52,Master,8.6,Ouest,Tech,Non retenu,Insuffisante
+Femme,56,Doctorat,9.2,Centre,Tech,Retenu,Satisfaisante
+Homme,41,Master,3.3,Sud,Industrie,Retenu,Satisfaisante
+Homme,60,Licence,5.6,Centre,Services,Retenu,Insuffisante
+Femme,57,Master,2.8,Nord,Tech,Non retenu,Satisfaisante
+Homme,48,Master,4.6,Sud,Finance,Non retenu,Satisfaisante
+Femme,64,Master,6.3,Nord,Industrie,Retenu,Insuffisante
+Homme,20,Licence,9.7,Sud,Industrie,Retenu,Insuffisante
+Femme,50,Master,13.1,Nord,Tech,Retenu,Satisfaisante
+Femme,27,Licence,3.2,Sud,Tech,Non retenu,Satisfaisante
+Homme,31,Licence,9.8,Sud,Tech,Non retenu,Satisfaisante
+Homme,36,Master,3.5,Nord,Services,Retenu,Satisfaisante
+Homme,35,Licence,18.0,Nord,Tech,Retenu,Satisfaisante
+Femme,38,Licence,10.2,Nord,Services,Non retenu,Satisfaisante
+Femme,61,Doctorat,2.6,Sud,Tech,Retenu,Satisfaisante
+Homme,42,Master,5.1,Ouest,Tech,Retenu,Insuffisante
+Homme,34,Licence,1.4,Nord,Services,Non retenu,Insuffisante
+Homme,33,Master,3.7,Ouest,Finance,Retenu,Insuffisante
+Femme,36,Master,8.7,Nord,Tech,Non retenu,Satisfaisante
+Femme,21,Licence,7.5,Sud,Industrie,Retenu,Insuffisante
+Homme,59,Licence,1.1,Nord,Tech,Non retenu,Insuffisante
+Homme,31,Master,3.7,Ouest,Tech,Retenu,Satisfaisante
+Homme,57,Doctorat,1.1,Sud,Tech,Retenu,Satisfaisante
+Homme,24,Licence,9.1,Ouest,Services,Non retenu,Satisfaisante
+Homme,30,Master,4.8,Sud,Services,Retenu,Insuffisante
+Femme,31,Licence,1.8,Nord,Tech,Non retenu,Insuffisante
+Femme,43,Licence,3.3,Nord,Services,Retenu,Satisfaisante
+Femme,46,Master,2.5,Centre,Services,Non retenu,Satisfaisante
+Homme,26,Master,0.5,Centre,Finance,Retenu,Satisfaisante
+Femme,23,Master,10.4,Nord,Services,Retenu,Satisfaisante
+Homme,37,Master,8.1,Centre,Services,Retenu,Satisfaisante
+Homme,41,Licence,4.4,Centre,Industrie,Retenu,Insuffisante
+Femme,43,Licence,3.1,Nord,Services,Non retenu,Insuffisante
+Homme,20,Licence,3.0,Ouest,Industrie,Retenu,Insuffisante
+Femme,53,Licence,1.8,Sud,Finance,Retenu,Insuffisante
+Femme,37,Master,2.7,Ouest,Finance,Non retenu,Satisfaisante
+Femme,42,Licence,7.7,Nord,Tech,Non retenu,Satisfaisante
+Homme,43,Master,2.8,Nord,Finance,Retenu,Insuffisante
+Homme,29,Master,1.2,Centre,Services,Non retenu,Satisfaisante
+Femme,48,Master,5.0,Nord,Finance,Non retenu,Satisfaisante
+Homme,56,Master,3.1,Centre,Industrie,Retenu,Satisfaisante
+Femme,43,Licence,3.4,Ouest,Tech,Non retenu,Insuffisante
+Femme,30,Licence,9.3,Ouest,Services,Non retenu,Insuffisante
+Homme,33,Master,4.9,Nord,Services,Retenu,Insuffisante
+Homme,40,Master,13.8,Nord,Tech,Non retenu,Satisfaisante
+Homme,40,Master,6.6,Centre,Tech,Retenu,Satisfaisante
+Femme,49,Master,1.8,Sud,Services,Retenu,Insuffisante
+Femme,30,Master,3.0,Centre,Finance,Retenu,Satisfaisante
+Homme,36,Licence,6.4,Ouest,Tech,Retenu,Insuffisante
+Homme,42,Licence,2.4,Nord,Industrie,Retenu,Satisfaisante
+Femme,39,Licence,2.0,Nord,Services,Non retenu,Insuffisante
+Homme,36,Master,4.8,Sud,Services,Retenu,Insuffisante
+Homme,29,Licence,2.0,Centre,Tech,Non retenu,Satisfaisante
+Homme,34,Doctorat,2.6,Ouest,Industrie,Retenu,Satisfaisante
+Homme,38,Licence,2.5,Centre,Tech,Retenu,Insuffisante
+Homme,50,Licence,3.9,Centre,Industrie,Non retenu,Insuffisante
+Homme,37,Licence,7.3,Sud,Services,Non retenu,Insuffisante
+Femme,53,Master,7.1,Nord,Tech,Retenu,Satisfaisante
+Homme,46,Licence,4.1,Centre,Finance,Retenu,Satisfaisante
+Homme,41,Master,3.1,Ouest,Tech,Non retenu,Insuffisante
+Femme,42,Licence,2.3,Sud,Industrie,Non retenu,Satisfaisante
+Femme,40,Licence,0.9,Nord,Finance,Non retenu,Insuffisante
+Homme,35,Master,1.0,Nord,Tech,Retenu,Insuffisante
+Homme,32,Master,6.6,Centre,Tech,Retenu,Insuffisante
+Femme,52,Licence,7.2,Centre,Finance,Non retenu,Insuffisante
+Femme,31,Licence,10.5,Centre,Industrie,Retenu,Satisfaisante
+Homme,49,Licence,5.1,Ouest,Finance,Non retenu,Insuffisante
+Homme,31,Licence,3.6,Sud,Industrie,Non retenu,Insuffisante
+Femme,40,Licence,3.2,Centre,Services,Non retenu,Satisfaisante
+Femme,46,Licence,7.8,Centre,Tech,Retenu,Satisfaisante
+Homme,51,Licence,1.9,Centre,Services,Retenu,Satisfaisante
+Femme,42,Doctorat,5.1,Centre,Services,Retenu,Insuffisante
+Homme,30,Licence,0.6,Sud,Finance,Non retenu,Insuffisante
+Femme,26,Licence,4.1,Nord,Services,Retenu,Satisfaisante
+Homme,31,Licence,1.9,Ouest,Tech,Non retenu,Insuffisante
+Homme,46,Licence,3.4,Nord,Tech,Retenu,Satisfaisante
+Homme,28,Master,5.0,Sud,Services,Non retenu,Satisfaisante
+Homme,47,Master,5.7,Sud,Tech,Retenu,Satisfaisante
+Homme,38,Licence,2.4,Centre,Tech,Retenu,Satisfaisante
+Femme,21,Master,0.3,Nord,Industrie,Non retenu,Insuffisante
+Femme,31,Master,3.1,Centre,Industrie,Retenu,Satisfaisante
+Femme,43,Master,7.1,Nord,Finance,Non retenu,Insuffisante
+Femme,29,Doctorat,4.5,Ouest,Services,Non retenu,Satisfaisante
+Femme,40,Licence,6.7,Centre,Services,Retenu,Satisfaisante
+Femme,43,Master,1.8,Sud,Services,Non retenu,Satisfaisante
+Homme,20,Licence,0.9,Sud,Tech,Non retenu,Insuffisante
+Femme,20,Master,3.1,Nord,Tech,Non retenu,Satisfaisante
+Homme,29,Master,6.1,Centre,Industrie,Retenu,Insuffisante
+Femme,22,Master,3.1,Centre,Tech,Non retenu,Satisfaisante
+Homme,42,Licence,1.4,Sud,Industrie,Non retenu,Satisfaisante
+Homme,37,Master,1.2,Centre,Industrie,Retenu,Insuffisante
+Femme,30,Licence,1.5,Centre,Services,Non retenu,Satisfaisante
+Homme,40,Master,1.9,Nord,Finance,Retenu,Satisfaisante
+Homme,42,Licence,3.2,Centre,Tech,Retenu,Insuffisante
+Femme,20,Licence,8.4,Nord,Finance,Retenu,Satisfaisante
+Femme,28,Licence,3.8,Sud,Tech,Non retenu,Insuffisante
+Femme,34,Licence,4.1,Nord,Services,Non retenu,Satisfaisante
+Femme,54,Licence,4.8,Sud,Industrie,Non retenu,Satisfaisante
+Femme,35,Master,3.6,Nord,Services,Non retenu,Satisfaisante
+Femme,51,Licence,8.8,Centre,Industrie,Non retenu,Satisfaisante
+Homme,24,Licence,7.9,Nord,Industrie,Retenu,Insuffisante
+Homme,26,Licence,1.5,Sud,Tech,Retenu,Insuffisante
+Homme,43,Master,1.6,Centre,Finance,Non retenu,Satisfaisante
+Femme,33,Licence,3.9,Nord,Services,Non retenu,Insuffisante
+Homme,52,Master,6.8,Sud,Finance,Non retenu,Satisfaisante
+Femme,46,Master,6.3,Ouest,Tech,Retenu,Satisfaisante
+Femme,27,Licence,2.6,Nord,Industrie,Non retenu,Insuffisante
+Homme,24,Master,14.2,Ouest,Finance,Retenu,Satisfaisante
+Homme,47,Doctorat,1.3,Centre,Tech,Retenu,Insuffisante
+Femme,42,Master,2.6,Nord,Services,Non retenu,Satisfaisante
+Homme,42,Master,3.0,Ouest,Tech,Retenu,Satisfaisante
+Homme,26,Doctorat,5.7,Sud,Services,Retenu,Satisfaisante
+Femme,41,Master,1.4,Ouest,Finance,Retenu,Insuffisante
+Homme,23,Doctorat,4.3,Ouest,Services,Retenu,Insuffisante
+Femme,42,Licence,4.2,Sud,Industrie,Non retenu,Insuffisante
+Femme,43,Licence,5.9,Centre,Industrie,Non retenu,Insuffisante
+Homme,30,Master,6.3,Sud,Services,Non retenu,Insuffisante
+Femme,31,Licence,11.1,Sud,Finance,Non retenu,Insuffisante
+Homme,64,Master,4.7,Ouest,Services,Retenu,Insuffisante
+Femme,41,Licence,1.0,Centre,Industrie,Non retenu,Insuffisante
+Femme,39,Licence,8.5,Nord,Industrie,Retenu,Insuffisante
+Homme,27,Master,0.9,Centre,Tech,Retenu,Satisfaisante
+Homme,44,Licence,7.6,Ouest,Services,Non retenu,Satisfaisante
+Homme,40,Master,1.6,Ouest,Tech,Retenu,Satisfaisante
+Homme,41,Licence,2.7,Nord,Tech,Retenu,Satisfaisante
+Homme,50,Doctorat,0.5,Sud,Finance,Retenu,Insuffisante
+Homme,44,Doctorat,0.5,Sud,Tech,Retenu,Insuffisante
+Femme,64,Licence,6.5,Centre,Finance,Retenu,Insuffisante
+Femme,33,Licence,5.4,Ouest,Industrie,Non retenu,Insuffisante
+Femme,31,Master,1.0,Centre,Finance,Non retenu,Insuffisante
+Femme,47,Licence,11.0,Nord,Services,Retenu,Insuffisante
+Homme,30,Master,1.8,Nord,Finance,Retenu,Insuffisante
+Homme,47,Licence,4.5,Centre,Tech,Non retenu,Insuffisante
+Homme,26,Master,4.0,Sud,Industrie,Retenu,Satisfaisante
+Homme,39,Master,3.1,Nord,Finance,Retenu,Insuffisante
+Femme,60,Master,0.8,Nord,Finance,Retenu,Insuffisante
+Homme,39,Master,9.7,Centre,Finance,Retenu,Insuffisante
+Homme,43,Master,7.5,Ouest,Tech,Non retenu,Satisfaisante
+Homme,58,Licence,2.8,Centre,Finance,Non retenu,Insuffisante
+Homme,44,Licence,2.0,Ouest,Industrie,Non retenu,Insuffisante
+Homme,34,Licence,12.2,Sud,Industrie,Retenu,Satisfaisante
+Homme,37,Licence,2.5,Sud,Finance,Non retenu,Insuffisante
+Homme,56,Licence,3.8,Sud,Tech,Retenu,Satisfaisante
+Homme,55,Licence,3.0,Sud,Industrie,Retenu,Insuffisante
+Homme,53,Master,3.7,Nord,Tech,Retenu,Insuffisante
+Femme,39,Master,7.0,Ouest,Tech,Retenu,Insuffisante
+Homme,32,Licence,1.8,Sud,Tech,Retenu,Insuffisante
+Femme,42,Master,5.2,Centre,Finance,Retenu,Insuffisante
+Homme,22,Doctorat,3.5,Centre,Finance,Retenu,Satisfaisante
+Femme,24,Licence,4.6,Centre,Industrie,Non retenu,Satisfaisante
+Homme,31,Master,7.5,Nord,Finance,Non retenu,Insuffisante
+Femme,38,Master,3.4,Ouest,Tech,Non retenu,Satisfaisante
+Homme,44,Licence,7.9,Centre,Services,Retenu,Satisfaisante
+Femme,20,Licence,5.9,Nord,Industrie,Non retenu,Satisfaisante
+Homme,56,Master,7.5,Nord,Services,Retenu,Satisfaisante
+Femme,37,Master,16.2,Nord,Industrie,Retenu,Satisfaisante
+Homme,46,Licence,3.6,Centre,Services,Retenu,Insuffisante
+Femme,55,Licence,6.1,Nord,Services,Retenu,Satisfaisante
+Femme,44,Master,7.6,Nord,Finance,Non retenu,Satisfaisante
+Homme,57,Licence,4.2,Ouest,Finance,Non retenu,Satisfaisante
+Homme,35,Licence,3.1,Centre,Finance,Retenu,Satisfaisante
+Femme,27,Doctorat,4.8,Nord,Industrie,Retenu,Satisfaisante
+Femme,39,Licence,7.1,Ouest,Services,Non retenu,Insuffisante
+Femme,30,Licence,5.8,Nord,Finance,Non retenu,Satisfaisante
+Homme,54,Master,4.4,Nord,Tech,Retenu,Insuffisante
+Homme,20,Master,1.9,Ouest,Services,Non retenu,Satisfaisante
+Femme,43,Doctorat,7.6,Nord,Finance,Retenu,Satisfaisante
+Femme,41,Licence,4.5,Nord,Services,Non retenu,Insuffisante
+Homme,43,Licence,7.2,Sud,Finance,Retenu,Insuffisante
+Femme,34,Master,5.4,Ouest,Services,Non retenu,Satisfaisante
+Homme,30,Licence,2.9,Centre,Services,Non retenu,Insuffisante
+Homme,37,Master,4.3,Centre,Industrie,Retenu,Insuffisante
+Homme,21,Master,6.0,Nord,Finance,Retenu,Insuffisante
+Homme,26,Master,7.3,Centre,Services,Retenu,Insuffisante
+Femme,33,Master,1.0,Nord,Tech,Non retenu,Insuffisante
+Femme,27,Licence,9.0,Centre,Tech,Retenu,Satisfaisante
+Femme,31,Master,3.4,Ouest,Industrie,Retenu,Satisfaisante
+Homme,43,Licence,6.8,Centre,Tech,Retenu,Satisfaisante
+Homme,20,Licence,5.6,Ouest,Tech,Retenu,Satisfaisante
+Femme,29,Master,5.4,Nord,Finance,Retenu,Satisfaisante
+Homme,21,Licence,3.2,Ouest,Finance,Retenu,Insuffisante
+Femme,41,Master,5.9,Nord,Finance,Retenu,Satisfaisante
+Femme,47,Licence,1.3,Nord,Tech,Retenu,Insuffisante
+Femme,39,Master,4.1,Nord,Finance,Retenu,Insuffisante
+Femme,22,Master,2.3,Nord,Finance,Non retenu,Satisfaisante
+Femme,31,Licence,14.4,Centre,Services,Retenu,Insuffisante
+Femme,30,Master,4.6,Ouest,Tech,Retenu,Insuffisante
+Homme,39,Licence,12.0,Centre,Finance,Non retenu,Satisfaisante
+Femme,49,Licence,1.2,Nord,Services,Non retenu,Insuffisante
+Femme,33,Doctorat,4.4,Nord,Finance,Retenu,Satisfaisante
+Homme,56,Licence,1.0,Nord,Industrie,Non retenu,Satisfaisante
+Femme,43,Licence,3.8,Centre,Services,Non retenu,Insuffisante
+Homme,52,Licence,7.6,Centre,Services,Retenu,Insuffisante
+Femme,35,Licence,4.9,Centre,Services,Retenu,Insuffisante
+Femme,23,Master,6.1,Sud,Finance,Retenu,Satisfaisante
+Homme,64,Licence,2.7,Centre,Tech,Retenu,Insuffisante
+Femme,39,Master,2.8,Ouest,Services,Non retenu,Satisfaisante
+Femme,31,Licence,4.3,Centre,Tech,Non retenu,Insuffisante
+Femme,23,Licence,3.4,Nord,Industrie,Non retenu,Insuffisante
+Homme,20,Licence,7.6,Nord,Finance,Retenu,Satisfaisante
+Femme,53,Master,7.6,Sud,Industrie,Retenu,Satisfaisante
+Homme,41,Licence,5.2,Sud,Finance,Retenu,Insuffisante
+Femme,39,Licence,14.1,Nord,Services,Retenu,Satisfaisante
+Femme,31,Licence,4.3,Ouest,Services,Retenu,Insuffisante
+Femme,43,Master,1.5,Centre,Tech,Retenu,Satisfaisante
+Femme,50,Master,2.0,Centre,Services,Retenu,Satisfaisante
+Femme,29,Licence,9.6,Centre,Industrie,Retenu,Insuffisante
+Homme,34,Master,1.5,Centre,Services,Retenu,Insuffisante
+Homme,21,Licence,1.4,Centre,Tech,Non retenu,Insuffisante
+Femme,24,Licence,2.3,Nord,Tech,Non retenu,Insuffisante
+Femme,32,Master,1.9,Sud,Services,Retenu,Insuffisante
+Homme,40,Licence,4.7,Sud,Finance,Non retenu,Insuffisante
+Femme,60,Licence,2.9,Sud,Services,Non retenu,Satisfaisante
+Femme,44,Doctorat,10.5,Sud,Services,Retenu,Satisfaisante
+Homme,42,Master,1.8,Centre,Services,Non retenu,Insuffisante
+Homme,39,Master,11.8,Centre,Finance,Non retenu,Insuffisante
+Femme,49,Master,2.9,Nord,Finance,Non retenu,Insuffisante
+Homme,36,Licence,8.7,Centre,Finance,Retenu,Satisfaisante
+Homme,28,Master,6.6,Centre,Finance,Retenu,Satisfaisante
+Homme,31,Master,7.9,Ouest,Tech,Retenu,Satisfaisante
+Femme,39,Master,9.1,Sud,Finance,Retenu,Satisfaisante
+Homme,45,Master,1.3,Centre,Services,Retenu,Insuffisante
+Femme,45,Doctorat,8.0,Nord,Industrie,Retenu,Satisfaisante
+Homme,41,Licence,3.4,Ouest,Industrie,Non retenu,Satisfaisante
+Femme,37,Master,7.6,Nord,Services,Non retenu,Satisfaisante
+Femme,46,Licence,2.0,Centre,Finance,Non retenu,Insuffisante
+Homme,42,Licence,4.0,Centre,Finance,Retenu,Insuffisante

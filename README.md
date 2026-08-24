@@ -137,4 +137,3 @@ Les corrections doivent inclure un test de non-régression et préserver la dist
 
 Apache License 2.0. Voir [LICENSE](LICENSE).
 
-
