@@ -23,6 +23,11 @@ class CDDResult:
     directional_signal: bool
     material_signal: bool
     materiality_threshold: float
+    confidence_level: float | None
+    confidence_low: float | None
+    confidence_high: float | None
+    bootstrap_iterations: int
+    bootstrap_valid_iterations: int
     coverage: float
     included_rows: int
     excluded_rows: int
@@ -43,6 +48,11 @@ class CDDResult:
             "directional_signal": self.directional_signal,
             "material_signal": self.material_signal,
             "materiality_threshold": self.materiality_threshold,
+            "confidence_level": self.confidence_level,
+            "confidence_low": self.confidence_low,
+            "confidence_high": self.confidence_high,
+            "bootstrap_iterations": self.bootstrap_iterations,
+            "bootstrap_valid_iterations": self.bootstrap_valid_iterations,
             "coverage": self.coverage,
             "included_rows": self.included_rows,
             "excluded_rows": self.excluded_rows,
@@ -82,4 +92,3 @@ class TradeoffResult:
     test_rows: int
     excluded_features: tuple[str, ...]
     random_state: int
-

@@ -25,5 +25,7 @@ jobs:
       - name: Lint
         run: ruff check .
       - name: Tests
-        run: pytest --cov=eu_ai_auditor --cov-report=term-missing
-
+        run: pytest --cov=eu_ai_auditor --cov-report=term-missing --cov-fail-under=80
+      - name: Build package
+        if: matrix.python-version == '3.12'
+        run: python -m build

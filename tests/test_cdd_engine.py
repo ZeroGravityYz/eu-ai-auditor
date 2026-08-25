@@ -84,3 +84,40 @@ def test_sparse_strata_are_reported_and_excluded():
     assert result.coverage == pytest.approx(4 / 6)
     assert any("exclue" in note for note in result.notes)
 
+
+def test_bootstrap_interval_is_reproducible_and_contains_point_estimate():
+    data = pd.DataFrame(
+        {
+            "genre": ["F"] * 60 + ["H"] * 40 + ["F"] * 20 + ["H"] * 80,
+            "decision": ["non"] * 100 + ["oui"] * 100,
+            "niveau": ["A"] * 200,
+        }
+    )
+    kwargs = {
+        "protected_attribute": "genre",
+        "protected_value": "F",
+        "decision_attribute": "decision",
+        "advantaged_value": "oui",
+        "conditioning_attributes": "niveau",
+        "min_outcome_count": 5,
+        "bootstrap_iterations": 100,
+        "confidence_level": 0.95,
+        "random_state": 7,
+    }
+    first = calculate_cdd(data, **kwargs)
+    second = calculate_cdd(data, **kwargs)
+
+    assert first.confidence_low is not None
+    assert first.confidence_high is not None
+    assert first.confidence_low < first.gap < first.confidence_high
+    assert first.confidence_low == pytest.approx(second.confidence_low)
+    assert first.confidence_high == pytest.approx(second.confidence_high)
+    assert first.bootstrap_valid_iterations == 100
+
+
+def test_bootstrap_parameters_are_validated():
+    data = pd.DataFrame({"s": [0, 1], "y": [0, 1]})
+    with pytest.raises(ValueError, match="bootstrap_iterations"):
+        calculate_cdd(data, "s", 1, "y", 1, bootstrap_iterations=-1)
+    with pytest.raises(ValueError, match="confidence_level"):
+        calculate_cdd(data, "s", 1, "y", 1, confidence_level=1.0)

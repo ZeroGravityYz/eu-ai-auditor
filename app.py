@@ -10,6 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from eu_ai_auditor import (
+    build_evidence_bundle,
     calculate_cdd,
     calculate_proxy_matrix,
     calculate_risk_quadrants,
@@ -163,6 +164,12 @@ with st.sidebar:
     with st.expander("Seuils et qualité"):
         materiality = st.slider("Seuil de matérialité CDD", 0.0, 0.30, 0.05, 0.01)
         min_outcome_count = st.number_input("Minimum par issue et par strate", 1, 100, 5)
+        bootstrap_iterations = st.select_slider(
+            "Réplications bootstrap", options=[0, 100, 250, 500], value=250
+        )
+        confidence_level = st.select_slider(
+            "Niveau de confiance", options=[0.90, 0.95, 0.99], value=0.95
+        )
         low_proxy = st.slider("Seuil proxy moyen", 0.01, 0.50, 0.10, 0.01)
         high_proxy = st.slider("Seuil proxy haut", low_proxy + 0.01, 0.90, 0.30, 0.01)
         mean_quadrant = st.slider("Seuil impact moyen", 0.01, 0.30, 0.05, 0.01)
@@ -185,6 +192,8 @@ if run_audit:
             conditioning_attributes=conditioning,
             min_outcome_count=int(min_outcome_count),
             materiality_threshold=materiality,
+            bootstrap_iterations=int(bootstrap_iterations),
+            confidence_level=float(confidence_level),
         )
         proxy_result = calculate_proxy_matrix(
             dataset,
@@ -203,7 +212,15 @@ if run_audit:
             max_threshold=max_quadrant,
         )
         st.session_state["audit"] = {
-            "signature": (decision_attribute, str(favourable_value), protected_attribute, str(protected_value), tuple(conditioning)),
+            "signature": (
+                decision_attribute,
+                str(favourable_value),
+                protected_attribute,
+                str(protected_value),
+                tuple(conditioning),
+                int(bootstrap_iterations),
+                float(confidence_level),
+            ),
             "quality": quality,
             "cdd": cdd_result,
             "proxy": proxy_result,
@@ -221,7 +238,15 @@ if not audit:
     )
     st.stop()
 
-current_signature = (decision_attribute, str(favourable_value), protected_attribute, str(protected_value), tuple(conditioning))
+current_signature = (
+    decision_attribute,
+    str(favourable_value),
+    protected_attribute,
+    str(protected_value),
+    tuple(conditioning),
+    int(bootstrap_iterations),
+    float(confidence_level),
+)
 if audit["signature"] != current_signature:
     st.warning("Les paramètres ont changé. Relancez l'audit pour mettre les résultats à jour.")
 
@@ -239,7 +264,17 @@ with tabs[0]:
     col3.metric("Proxys à haut risque", int((proxy_result.scores["risk"] == "Haut").sum()))
     col4.metric("Valeurs manquantes", f"{quality['overall_missing_rate']:.1%}")
     if cdd_result.material_signal:
-        st.warning(f"CDD: {cdd_result.status}. Une investigation contextuelle est requise.")
+        if (
+            cdd_result.confidence_low is not None
+            and cdd_result.confidence_high is not None
+            and cdd_result.confidence_low <= cdd_result.materiality_threshold
+        ):
+            st.warning(
+                f"CDD: {cdd_result.status}, mais l'intervalle bootstrap recoupe le seuil. "
+                "L'incertitude doit être conservée dans la décision."
+            )
+        else:
+            st.warning(f"CDD: {cdd_result.status}. Une investigation contextuelle est requise.")
     else:
         st.success(f"CDD: {cdd_result.status}. Cela ne constitue pas une conclusion juridique.")
     left, right = st.columns([1.05, 0.95])
@@ -261,10 +296,19 @@ with tabs[0]:
 with tabs[1]:
     st.subheader("Disparité démographique conditionnelle")
     st.latex(r"A_R=P(S=s\mid Y=\mathrm{favorable},R),\quad D_R=P(S=s\mid Y=\mathrm{defavorable},R)")
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric("A_R agrégé", "N/D" if cdd_result.advantaged_share is None else f"{cdd_result.advantaged_share:.1%}")
     c2.metric("D_R agrégé", "N/D" if cdd_result.disadvantaged_share is None else f"{cdd_result.disadvantaged_share:.1%}")
     c3.metric("D_R - A_R", "N/D" if cdd_result.gap is None else f"{cdd_result.gap:.1%}")
+    c4.metric(
+        "IC bootstrap",
+        (
+            f"{cdd_result.confidence_low:.1%} à {cdd_result.confidence_high:.1%}"
+            if cdd_result.confidence_low is not None
+            and cdd_result.confidence_high is not None
+            else "Non calculé"
+        ),
+    )
     if cdd_result.strata["eligible"].any():
         figure = cdd_strata_chart(cdd_result)
         st.pyplot(figure, width="content")
@@ -359,6 +403,15 @@ with tabs[5]:
             "protected_attributes": protected_attributes,
         }
         try:
+            prebundle = build_evidence_bundle(
+                dataset,
+                cdd_result,
+                proxy_result,
+                quadrant_result=quadrant_result,
+                tradeoff_result=audit.get("tradeoff"),
+                metadata=metadata,
+            )
+            metadata["audit_id"] = prebundle["audit_id"]
             pdf = generate_compliance_report(
                 dataset,
                 cdd_result,
@@ -374,16 +427,19 @@ with tabs[5]:
                 mime="application/pdf",
                 type="primary",
             )
-            json_payload = {
-                "cdd": cdd_result.summary(),
-                "proxy_scores": proxy_result.scores.to_dict(orient="records"),
-                "quadrants": quadrant_result.features.to_dict(orient="records"),
-                "quality": quality,
-            }
+            evidence = build_evidence_bundle(
+                dataset,
+                cdd_result,
+                proxy_result,
+                quadrant_result=quadrant_result,
+                tradeoff_result=audit.get("tradeoff"),
+                metadata=metadata,
+                report_bytes=pdf,
+            )
             st.download_button(
-                "Télécharger les résultats JSON",
-                data=json.dumps(json_payload, ensure_ascii=False, indent=2, default=str),
-                file_name="resultats_eu_ai_auditor.json",
+                "Télécharger le manifeste de preuves JSON",
+                data=json.dumps(evidence, ensure_ascii=False, indent=2, default=str),
+                file_name="preuves_eu_ai_auditor.json",
                 mime="application/json",
             )
         except Exception as exc:  # keep the UI responsive and show a bounded failure

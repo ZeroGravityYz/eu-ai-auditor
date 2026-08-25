@@ -63,6 +63,9 @@ def calculate_cdd(
     numeric_bins: int = 5,
     max_numeric_categories: int = 10,
     materiality_threshold: float = 0.0,
+    bootstrap_iterations: int = 0,
+    confidence_level: float = 0.95,
+    random_state: int = 42,
 ) -> CDDResult:
     """Calculate conditional demographic disparity summary statistics.
 
@@ -85,6 +88,10 @@ def calculate_cdd(
         raise ValueError("numeric_bins doit être supérieur ou égal à 2.")
     if not 0 <= materiality_threshold <= 1:
         raise ValueError("materiality_threshold doit être compris entre 0 et 1.")
+    if bootstrap_iterations < 0:
+        raise ValueError("bootstrap_iterations doit être supérieur ou égal à 0.")
+    if not 0 < confidence_level < 1:
+        raise ValueError("confidence_level doit être strictement compris entre 0 et 1.")
 
     required = [protected_attribute, decision_attribute, *conditioning]
     _require_columns(data, required)
@@ -170,6 +177,59 @@ def calculate_cdd(
         )
     notes.append("Le seuil de matérialité est un paramètre d'audit, pas un seuil juridique.")
 
+    confidence_low = confidence_high = None
+    bootstrap_valid_iterations = 0
+    if bootstrap_iterations and gap is not None:
+        rng = np.random.default_rng(random_state)
+        bootstrap_gaps: list[float] = []
+        for _ in range(bootstrap_iterations):
+            positions = rng.integers(0, len(data), size=len(data))
+            sample = data.iloc[positions].reset_index(drop=True)
+            try:
+                sampled = calculate_cdd(
+                    sample,
+                    protected_attribute=protected_attribute,
+                    protected_value=protected_value,
+                    decision_attribute=decision_attribute,
+                    advantaged_value=advantaged_value,
+                    conditioning_attributes=conditioning,
+                    min_outcome_count=min_outcome_count,
+                    numeric_bins=numeric_bins,
+                    max_numeric_categories=max_numeric_categories,
+                    materiality_threshold=materiality_threshold,
+                    bootstrap_iterations=0,
+                    confidence_level=confidence_level,
+                    random_state=random_state,
+                )
+            except ValueError:
+                continue
+            if sampled.gap is not None and np.isfinite(sampled.gap):
+                bootstrap_gaps.append(sampled.gap)
+        bootstrap_valid_iterations = len(bootstrap_gaps)
+        minimum_valid = max(30, int(bootstrap_iterations * 0.8))
+        if bootstrap_valid_iterations >= minimum_valid:
+            alpha = (1 - confidence_level) / 2
+            confidence_low, confidence_high = (
+                float(value)
+                for value in np.quantile(bootstrap_gaps, [alpha, 1 - alpha])
+            )
+            notes.append(
+                f"Intervalle bootstrap à {confidence_level:.0%}: "
+                f"[{confidence_low:.3f}, {confidence_high:.3f}] "
+                f"({bootstrap_valid_iterations}/{bootstrap_iterations} réplications valides)."
+            )
+            if confidence_low > materiality_threshold:
+                notes.append("Le signal dépasse le seuil sur l'ensemble de l'intervalle bootstrap.")
+            elif confidence_high <= materiality_threshold:
+                notes.append("L'intervalle bootstrap reste sous le seuil de matérialité choisi.")
+            else:
+                notes.append("L'intervalle bootstrap recoupe le seuil: l'interprétation reste incertaine.")
+        else:
+            notes.append(
+                f"Intervalle non calculé: seulement {bootstrap_valid_iterations}/{bootstrap_iterations} "
+                "réplications bootstrap valides."
+            )
+
     if "weight" not in strata:
         strata["weight"] = 0.0
     display_columns = [
@@ -197,6 +257,11 @@ def calculate_cdd(
         directional_signal=directional_signal,
         material_signal=material_signal,
         materiality_threshold=materiality_threshold,
+        confidence_level=confidence_level if bootstrap_iterations else None,
+        confidence_low=confidence_low,
+        confidence_high=confidence_high,
+        bootstrap_iterations=bootstrap_iterations,
+        bootstrap_valid_iterations=bootstrap_valid_iterations,
         coverage=coverage,
         included_rows=included_rows,
         excluded_rows=excluded_rows,
@@ -208,4 +273,3 @@ def calculate_cdd(
 
 # A concise alias for package users.
 cdd = calculate_cdd
-

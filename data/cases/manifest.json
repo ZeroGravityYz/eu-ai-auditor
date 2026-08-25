@@ -1,0 +1,30 @@
+{
+  "schema": "eu-ai-auditor.public-datasets.v1",
+  "sources": {
+    "adult": {
+      "url": "https://archive.ics.uci.edu/static/public/2/adult.zip",
+      "sha256": "7537312dd56c2b98035880805ce99e68183a30ee468aa5329d6df0fbb3cc21bb",
+      "doi": "10.24432/C5XW20"
+    },
+    "south_german_credit": {
+      "url": "https://archive.ics.uci.edu/static/public/522/south+german+credit.zip",
+      "sha256": "0b40d40eb7321693d559e247a556f88a6cc8df8489c3cb2ae084db7592584551",
+      "doi": "10.24432/C5X89F"
+    }
+  },
+  "outputs": {
+    "adult_income_sample.csv": {
+      "rows": 6000,
+      "sha256": "79175a76a08c2aa79f9f437d2cfe0c0b4f8fe2e714db30651f3761f2156962b1"
+    },
+    "south_german_credit.csv": {
+      "rows": 1000,
+      "sha256": "3470bc1a9afa85e8b50120898a8b4a0dacf1e1bac31ad7b516f334162afbb985"
+    }
+  },
+  "preparation": {
+    "script": "scripts/prepare_public_cases.py",
+    "random_state": 42,
+    "adult_sample_rows": 6000
+  }
+}

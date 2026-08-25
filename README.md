@@ -1,11 +1,17 @@
 # EU AI Auditor
 
+[![CI](https://github.com/ZeroGravityYz/eu-ai-auditor/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroGravityYz/eu-ai-auditor/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-0F766E)](https://www.python.org/)
+[![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-132238)](LICENSE)
+
 EU AI Auditor est un package Python et une application Streamlit pour produire des preuves statistiques de biais dans les systèmes de décision. Il réunit quatre analyses dans un flux léger et reproductible :
 
 - la disparité démographique conditionnelle (CDD) proposée comme mesure descriptive par Wachter, Mittelstadt et Russell ;
 - une matrice de risque de proxys inspirée de l'approche présentée par Deloitte ;
 - les quadrants d'impact des variables protégées ;
 - une frontière performance-équité comparant régression logistique et arbre CART.
+
+Depuis la version 0.2, la CDD peut être accompagnée d'un intervalle bootstrap, et chaque exécution peut produire un manifeste JSON vérifiable contenant les empreintes du jeu de données, de la configuration, des résultats et du PDF.
 
 Le rapport PDF organise les résultats comme éléments de travail pour les articles 10, 11, 13 et 14 du règlement (UE) 2024/1689. Il ne certifie pas la conformité et ne remplace ni l'analyse juridique, ni l'évaluation des risques, ni la gouvernance interne.
 
@@ -39,6 +45,8 @@ result = calculate_cdd(
     conditioning_attributes=["diplome", "anciennete"],
     min_outcome_count=5,
     materiality_threshold=0.05,
+    bootstrap_iterations=250,
+    confidence_level=0.95,
 )
 
 print(result.gap)
@@ -63,8 +71,16 @@ eu-ai-auditor data/recrutement_demo.csv \
   --condition diplome \
   --condition anciennete_annees \
   --with-tradeoff \
+  --bootstrap-iterations 250 \
   --output output/pdf/rapport_audit.pdf \
-  --json output/resultats.json
+  --evidence output/evidence/audit.json
+```
+
+Le PDF et son manifeste peuvent ensuite être contrôlés sans relancer l'audit :
+
+```bash
+eu-ai-auditor-verify output/evidence/audit.json \
+  --report output/pdf/rapport_audit.pdf
 ```
 
 ## Comment la CDD est calculée
@@ -80,6 +96,8 @@ CDD = D_R - A_R
 Les statistiques conditionnelles sont agrégées en pondérant chaque strate par sa population. Une valeur positive indique que la classe protégée est proportionnellement plus présente dans les issues défavorables. Les strates qui n'atteignent pas l'effectif minimal dans chacune des deux issues sont affichées mais exclues de l'agrégat.
 
 Le seuil de matérialité configurable déclenche une priorité de revue. Ce n'est pas un seuil juridique. Le choix de `R`, des groupes et de la portée de l'analyse doit être justifié et documenté.
+
+L'intervalle de confiance utilise un bootstrap non paramétrique des lignes. Les strates, quantiles et règles d'éligibilité sont recalculés à chaque réplication. Si moins de 80 % des réplications sont exploitables, l'outil refuse d'afficher un intervalle.
 
 ## Mesures d'association des proxys
 
@@ -103,6 +121,42 @@ Le PDF contient :
 
 Voir [la correspondance AI Act](docs/ai-act-mapping.md) et [la méthodologie](docs/methodology.md).
 
+## Études de cas publiques
+
+Deux jeux UCI sous CC BY 4.0 sont inclus avec leurs attributions et un script de préparation reproductible :
+
+| Cas | Observations | Configuration CDD | Résultat descriptif |
+|---|---:|---|---|
+| Adult Income | 6 000 | `sex=Female`, conditionné par `education` | 26,2 %, IC95 % [23,4 % ; 28,6 %], couverture 93,4 % |
+| South German Credit | 1 000 | `age_group=under_25`, conditionné par `employment_duration` | 6,8 %, IC95 % [2,1 % ; 11,4 %], couverture 100 % |
+
+Ces valeurs démontrent le fonctionnement du logiciel. Adult prédit un revenu et ne constitue pas un jeu de recrutement. South German Credit date de 1973-1975 et suréchantillonne les mauvais risques. Aucun résultat ne doit être extrapolé à une population actuelle.
+
+```bash
+python examples/run_case_studies.py
+```
+
+Voir [les études de cas](docs/case-studies.md) et [les sources et licences](data/cases/SOURCES.md).
+
+## Manifeste de preuves
+
+Le manifeste `eu-ai-auditor.evidence.v1` ne copie aucune ligne source. Il enregistre :
+
+- l'identifiant stable de l'audit et la version du logiciel ;
+- l'empreinte SHA-256 du DataFrame, sa forme et ses colonnes ;
+- les paramètres CDD, les métriques et les résultats ;
+- l'empreinte et la taille du PDF ;
+- l'empreinte canonique du manifeste ;
+- une signature HMAC-SHA256 optionnelle, dont la clé reste hors du fichier.
+
+Cette vérification détecte une modification ; elle ne fournit pas à elle seule une identité de signataire, un horodatage qualifié ou une certification réglementaire.
+
+## Positionnement
+
+EU AI Auditor ne prétend pas inventer l'audit de biais ni être la seule implémentation de la CDD. [AIF360](https://github.com/Trusted-AI/AIF360) expose déjà `conditional_demographic_disparity`, [Fairlearn](https://fairlearn.org/) couvre de nombreuses métriques de groupe et [OxonFair](https://github.com/oxfordinternetinstitute/oxonfair) traite les arbitrages d'équité.
+
+Le projet se concentre sur un parcours compact pour données tabulaires : conditionnement explicite par des facteurs `R`, détection de proxys, comparaison LR/CART, interface française et dossier de preuves orienté AI Act. Voir [l'analyse de l'écosystème](docs/landscape.md).
+
 ## Architecture
 
 ```text
@@ -112,7 +166,7 @@ CSV
  ├─ matrice des proxys
  ├─ quadrants d'impact
  └─ comparaison LR / CART
-        └─ rapport PDF + résultats JSON
+        └─ rapport PDF + manifeste JSON vérifiable
 ```
 
 Le traitement ne dépend d'aucune API externe. L'application Streamlit conserve les données en mémoire le temps de la session ; la sécurité du serveur et la politique de conservation restent sous la responsabilité du déployeur.
@@ -122,7 +176,9 @@ Le traitement ne dépend d'aucune API externe. L'application Streamlit conserve 
 ```bash
 pip install -e ".[dev]"
 pytest
+pytest --cov=eu_ai_auditor --cov-fail-under=80
 ruff check .
+python -m build
 ```
 
 Les corrections doivent inclure un test de non-régression et préserver la distinction entre signal statistique et conclusion juridique. Voir [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -135,5 +191,4 @@ Les corrections doivent inclure un test de non-régression et préserver la dist
 
 ## Licence
 
-Apache License 2.0. Voir [LICENSE](LICENSE).
-
+Le code est sous Apache License 2.0. Voir [LICENSE](LICENSE). Les CSV de `data/cases/` sont sous CC BY 4.0 avec les attributions détaillées dans [SOURCES.md](data/cases/SOURCES.md).

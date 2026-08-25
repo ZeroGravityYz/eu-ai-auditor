@@ -28,7 +28,9 @@ from reportlab.platypus import (
 )
 
 from .data_quality import profile_dataset
+from .evidence import dataframe_sha256
 from .models import CDDResult, ProxyMatrixResult, QuadrantResult, TradeoffResult
+from .version import __version__
 from .visuals import cdd_strata_chart, proxy_heatmap, quadrant_chart, tradeoff_chart
 
 plt.switch_backend("Agg")
@@ -219,11 +221,6 @@ def _first_page(canvas, document) -> None:
     canvas.restoreState()
 
 
-def _dataset_digest(data: pd.DataFrame) -> str:
-    hashed = pd.util.hash_pandas_object(data, index=True).values.tobytes()
-    return hashlib.sha256(hashed).hexdigest()
-
-
 def generate_compliance_report(
     data: pd.DataFrame,
     cdd_result: CDDResult,
@@ -259,6 +256,22 @@ def generate_compliance_report(
     story: list[Any] = []
     assessment_date = str(metadata.get("assessment_date", date.today().isoformat()))
     system_name = str(metadata.get("system_name", "Système évalué"))
+    data_digest = dataframe_sha256(data)
+    fallback_audit_basis = "|".join(
+        [
+            data_digest,
+            system_name,
+            str(metadata.get("system_version", "À compléter")),
+            cdd_result.protected_attribute,
+            str(cdd_result.protected_value),
+            cdd_result.decision_attribute,
+            str(cdd_result.advantaged_value),
+        ]
+    )
+    audit_id = str(
+        metadata.get("audit_id")
+        or "audit-" + hashlib.sha256(fallback_audit_basis.encode("utf-8")).hexdigest()[:16]
+    )
 
     story.extend(
         [
@@ -272,9 +285,11 @@ def generate_compliance_report(
                     [
                         ["Fournisseur", metadata.get("provider_name", "À compléter")],
                         ["Version du système", metadata.get("system_version", "À compléter")],
+                        ["Identifiant de l'audit", audit_id],
+                        ["Version de l'outil", __version__],
                         ["Date de l'évaluation", assessment_date],
                         ["Responsable de l'audit", metadata.get("auditor", "À compléter")],
-                        ["Empreinte des données", _dataset_digest(data)[:24] + "..."],
+                        ["Empreinte des données", data_digest[:24] + "..."],
                     ],
                     columns=["Champ", "Valeur"],
                 ),
@@ -338,6 +353,17 @@ def generate_compliance_report(
             styles["body"],
         )
     )
+    if cdd_result.confidence_low is not None and cdd_result.confidence_high is not None:
+        if cdd_result.confidence_low > cdd_result.materiality_threshold:
+            uncertainty_text = "L'intervalle bootstrap reste entièrement au-dessus du seuil interne."
+        elif cdd_result.confidence_high <= cdd_result.materiality_threshold:
+            uncertainty_text = "L'intervalle bootstrap reste sous le seuil interne."
+        else:
+            uncertainty_text = (
+                "L'intervalle bootstrap recoupe le seuil interne: la classification de matérialité "
+                "est incertaine."
+            )
+        story.append(_p(uncertainty_text, styles["body"]))
     if quality["warnings"]:
         story.append(_p("Points de vigilance", styles["h2"]))
         for warning in quality["warnings"][:8]:
@@ -352,6 +378,8 @@ def generate_compliance_report(
             ["Classe protégée testée", f"{cdd_result.protected_attribute} = {cdd_result.protected_value}"],
             ["Facteurs de conditionnement R", ", ".join(cdd_result.conditioning_attributes) or "Aucun"],
             ["Origine des données", metadata.get("data_origin", "À compléter")],
+            ["Licence des données", metadata.get("dataset_license", "À compléter")],
+            ["Référence de source", metadata.get("source_reference", "À compléter")],
             ["Portée géographique", metadata.get("geographic_scope", "À compléter")],
         ],
         columns=["Élément", "Description"],
@@ -418,6 +446,24 @@ def generate_compliance_report(
             ["A_R agrégé", _format_percent(cdd_result.advantaged_share)],
             ["D_R agrégé", _format_percent(cdd_result.disadvantaged_share)],
             ["D_R - A_R", _format_percent(cdd_result.gap)],
+            [
+                f"Intervalle bootstrap ({cdd_result.confidence_level:.0%})"
+                if cdd_result.confidence_level
+                else "Intervalle bootstrap",
+                (
+                    f"[{_format_percent(cdd_result.confidence_low)} ; "
+                    f"{_format_percent(cdd_result.confidence_high)}]"
+                    if cdd_result.confidence_low is not None
+                    and cdd_result.confidence_high is not None
+                    else "Non calculé"
+                ),
+            ],
+            [
+                "Réplications bootstrap valides",
+                f"{cdd_result.bootstrap_valid_iterations}/{cdd_result.bootstrap_iterations}"
+                if cdd_result.bootstrap_iterations
+                else "Non demandées",
+            ],
             ["Seuil de matérialité choisi", _format_percent(cdd_result.materiality_threshold)],
             ["Couverture", _format_percent(cdd_result.coverage)],
             ["Interprétation descriptive", cdd_result.status],
@@ -613,7 +659,15 @@ def generate_compliance_report(
                 styles["body"],
             ),
             _p("Empreinte complète du jeu analysé", styles["h2"]),
-            _p(_dataset_digest(data), styles["small"]),
+            _p(data_digest, styles["small"]),
+            _p("Identifiant stable de l'audit", styles["h2"]),
+            _p(audit_id, styles["small"]),
+            _p(
+                "Un manifeste JSON séparé peut enregistrer cette empreinte, la configuration, les "
+                "résultats, l'empreinte du PDF et une signature HMAC optionnelle. Toute modification "
+                "ultérieure invalide la vérification d'intégrité.",
+                styles["body"],
+            ),
         ]
     )
 

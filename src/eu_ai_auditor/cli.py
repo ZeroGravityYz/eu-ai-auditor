@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,7 @@ import pandas as pd
 
 from .cdd_engine import calculate_cdd
 from .data_quality import profile_dataset
+from .evidence import build_evidence_bundle
 from .proxy_matrix import calculate_proxy_matrix
 from .report_generator import generate_compliance_report
 from .risk_quadrants import calculate_risk_quadrants
@@ -38,12 +40,24 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--additional-protected", action="append", default=[], help="Autre attribut protégé")
     parser.add_argument("--output", type=Path, default=Path("output/pdf/rapport_audit.pdf"))
     parser.add_argument("--json", dest="json_output", type=Path, help="Résumé JSON optionnel")
+    parser.add_argument(
+        "--evidence",
+        type=Path,
+        default=Path("output/evidence/audit_manifest.json"),
+        help="Manifeste de preuves vérifiable",
+    )
     parser.add_argument("--system-name", default="Système évalué")
     parser.add_argument("--provider-name", default="À compléter")
     parser.add_argument("--intended-purpose", default="À compléter")
     parser.add_argument("--with-tradeoff", action="store_true", help="Comparer LR et CART")
     parser.add_argument("--materiality-threshold", type=float, default=0.05)
     parser.add_argument("--min-outcome-count", type=int, default=5)
+    parser.add_argument("--bootstrap-iterations", type=int, default=250)
+    parser.add_argument("--confidence-level", type=float, default=0.95)
+    parser.add_argument(
+        "--signing-key-env",
+        help="Nom d'une variable d'environnement contenant la clé HMAC optionnelle",
+    )
     return parser
 
 
@@ -63,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
         conditioning_attributes=args.condition,
         materiality_threshold=args.materiality_threshold,
         min_outcome_count=args.min_outcome_count,
+        bootstrap_iterations=args.bootstrap_iterations,
+        confidence_level=args.confidence_level,
     )
     candidates = [
         column
@@ -91,7 +107,16 @@ def main(argv: list[str] | None = None) -> int:
         "intended_purpose": args.intended_purpose,
         "protected_attributes": protected_attributes,
     }
-    generate_compliance_report(
+    prebundle = build_evidence_bundle(
+        data,
+        cdd_result,
+        proxy_result,
+        quadrant_result=quadrant_result,
+        tradeoff_result=tradeoff_result,
+        metadata=metadata,
+    )
+    metadata["audit_id"] = prebundle["audit_id"]
+    pdf = generate_compliance_report(
         data,
         cdd_result,
         proxy_result,
@@ -99,6 +124,27 @@ def main(argv: list[str] | None = None) -> int:
         tradeoff_result=tradeoff_result,
         metadata=metadata,
         output_path=args.output,
+    )
+    signing_key = None
+    if args.signing_key_env:
+        signing_key = os.environ.get(args.signing_key_env)
+        if signing_key is None:
+            raise ValueError(
+                f"Variable d'environnement absente pour la signature: {args.signing_key_env}"
+            )
+    evidence = build_evidence_bundle(
+        data,
+        cdd_result,
+        proxy_result,
+        quadrant_result=quadrant_result,
+        tradeoff_result=tradeoff_result,
+        metadata=metadata,
+        report_bytes=pdf,
+        signing_key=signing_key,
+    )
+    args.evidence.parent.mkdir(parents=True, exist_ok=True)
+    args.evidence.write_text(
+        json.dumps(evidence, ensure_ascii=False, indent=2, default=str), encoding="utf-8"
     )
     if args.json_output:
         quality = profile_dataset(data, protected_attributes)
@@ -112,9 +158,9 @@ def main(argv: list[str] | None = None) -> int:
         args.json_output.parent.mkdir(parents=True, exist_ok=True)
         args.json_output.write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     print(f"Rapport créé: {args.output.resolve()}")
+    print(f"Manifeste créé: {args.evidence.resolve()}")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

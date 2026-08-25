@@ -12,6 +12,12 @@ Lorsque `R` est numérique et contient plus de dix valeurs distinctes, le moteur
 
 Une strate est exclue de l'agrégat si l'une des issues contient moins que l'effectif minimal configuré. Elle reste présente dans la table afin que la perte de couverture soit visible.
 
+### Incertitude par bootstrap
+
+Lorsque le bootstrap est activé, l'outil tire avec remise autant de lignes que le jeu d'origine et recalcule toute la procédure : nettoyage des colonnes requises, discrétisation éventuelle, éligibilité des strates, pondération et CDD. L'intervalle bilatéral est obtenu par les quantiles empiriques de la distribution des CDD valides.
+
+Le générateur exige au moins 30 réplications valides et 80 % du nombre demandé. Cette règle évite d'afficher un intervalle construit principalement sur des rééchantillonnages où des groupes ou issues auraient disparu. L'intervalle décrit l'incertitude d'échantillonnage sous les choix de modèle d'audit ; il ne couvre pas l'incertitude juridique, le biais de sélection ou une mauvaise spécification de `R`.
+
 ### Interprétation
 
 Une valeur positive de `D_R - A_R` est un signal directionnel défavorable à la classe protégée. Le logiciel distingue :
@@ -55,7 +61,13 @@ La performance est l'exactitude équilibrée. Le coût d'équité est la valeur 
 
 La frontière rend l'arbitrage visible. Elle ne recommande aucun point et ne fixe aucune pondération entre les objectifs.
 
-## 5. Menaces à la validité
+## 5. Traçabilité et intégrité
+
+Le manifeste versionné contient une empreinte du DataFrame construite à partir de l'ordre des colonnes, des types, de l'index et du hachage des valeurs. Le PDF est protégé par sa propre empreinte SHA-256. Le manifeste retire son bloc `integrity`, sérialise le reste en JSON canonique puis calcule son empreinte.
+
+Une clé fournie par l'opérateur peut ajouter un HMAC-SHA256. La clé n'est jamais écrite dans le manifeste. Cette méthode permet de détecter une altération et d'attester la possession d'un secret partagé ; elle ne remplace pas une signature électronique qualifiée, une infrastructure de clés publiques, un horodatage de confiance ou une politique de conservation.
+
+## 6. Menaces à la validité
 
 - choix inadéquat ou contestable des facteurs `R` ;
 - échantillons trop petits, non représentatifs ou avec données manquantes non aléatoires ;
@@ -64,4 +76,4 @@ La frontière rend l'arbitrage visible. Elle ne recommande aucun point et ne fix
 - causalité non identifiable par une association bivariée ;
 - multiples analyses exploratoires créant des signaux fortuits ;
 - confusion entre une mesure sur les données historiques et les effets réels du système.
-
+- dépendance du bootstrap à l'hypothèse que les lignes observées sont une approximation pertinente de la population auditée.
