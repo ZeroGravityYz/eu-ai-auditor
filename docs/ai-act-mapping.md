@@ -6,8 +6,10 @@ Cette correspondance décrit les éléments produits par EU AI Auditor et les la
 |---|---|---|
 | Article 10 - données et gouvernance | taux de valeurs manquantes, doublons, profils de colonnes, représentation des groupes, signaux CDD et proxys | provenance, base juridique, finalité initiale, choix de collecte, annotation, nettoyage, adéquation géographique et fonctionnelle, garanties pour catégories particulières |
 | Article 11 - documentation technique | paramètres d'audit, identifiant stable, empreintes du jeu et du PDF, manifeste versionné, métriques, résultats datés, limites, checklist annexe IV | description complète du système, architecture, ressources, standards, signatures qualifiées, déclaration UE de conformité, historique des changements |
+| Article 12 - journaux | schéma OversightParity reliant recommandation, exposition, décision humaine, recours, décision finale et horodatages | configuration effective des journaux, durée de conservation, contrôle d'accès, sécurité, représentativité et traitement des incidents |
 | Article 13 - transparence | finalité saisie, performances mesurées, limites, instructions d'interprétation, mauvais usages prévisibles | notice déployeur validée, cybersécurité, maintenance, durée de vie, mécanismes de journaux |
-| Article 14 - supervision humaine | cadre de surveillance, annulation, interruption, escalade et traçabilité | rôles nominatifs, compétences, formation, autorité, disponibilité et procédures opérationnelles testées |
+| Article 14 - supervision humaine | concordance humain-IA, corrections utiles, erreurs introduites, effet différentiel de l'exposition, cadre d'annulation, escalade et traçabilité | preuve du protocole d'affectation, rôles nominatifs, compétences, formation, autorité, disponibilité et procédures opérationnelles testées |
+| Article 86 - explication individuelle | documentation du rôle effectif de l'IA dans la chaîne et des principaux résultats agrégés du processus | explication claire adressée à la personne, examen du champ d'application, secret d'affaires, autres droits de contestation et réponse au cas individuel |
 | Annexe IV | checklist de complétude et preuves d'essais statistiques | dossier complet, gestion des risques, suivi après mise sur le marché, normes et validation par les responsables |
 
 ## Principe de rédaction

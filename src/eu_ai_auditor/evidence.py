@@ -10,10 +10,11 @@ from typing import Any
 
 import pandas as pd
 
-from .models import CDDResult, ProxyMatrixResult, QuadrantResult, TradeoffResult
+from .models import CDDResult, OversightResult, ProxyMatrixResult, QuadrantResult, TradeoffResult
 from .version import __version__
 
 EVIDENCE_SCHEMA = "eu-ai-auditor.evidence.v1"
+OVERSIGHT_EVIDENCE_SCHEMA = "eu-ai-auditor.oversight-evidence.v1"
 
 
 def _canonical_bytes(value: Any) -> bytes:
@@ -104,6 +105,84 @@ def build_evidence_bundle(
         },
         "metadata": metadata,
         "results": results,
+        "artifacts": {
+            "report_pdf": (
+                {
+                    "sha256": hashlib.sha256(report_bytes).hexdigest(),
+                    "bytes": len(report_bytes),
+                }
+                if report_bytes is not None
+                else None
+            )
+        },
+    }
+    manifest_sha256 = hashlib.sha256(_canonical_bytes(bundle)).hexdigest()
+    integrity: dict[str, Any] = {
+        "canonicalization": "JSON UTF-8, sorted keys, compact separators",
+        "manifest_sha256": manifest_sha256,
+    }
+    if signing_key is not None:
+        key = signing_key.encode("utf-8") if isinstance(signing_key, str) else signing_key
+        integrity["hmac_sha256"] = hmac.new(
+            key, manifest_sha256.encode("ascii"), hashlib.sha256
+        ).hexdigest()
+    bundle["integrity"] = integrity
+    return bundle
+
+
+def build_oversight_evidence_bundle(
+    data: pd.DataFrame,
+    result: OversightResult,
+    *,
+    metadata: dict[str, Any] | None = None,
+    report_bytes: bytes | None = None,
+    generated_at: str | None = None,
+    signing_key: str | bytes | None = None,
+) -> dict[str, Any]:
+    """Create an integrity-verifiable manifest for an OversightParity audit."""
+
+    metadata = dict(metadata or {})
+    audit_basis = {
+        "dataset_sha256": dataframe_sha256(data),
+        "configuration": {
+            "protected_attribute": result.protected_attribute,
+            "protected_value": result.protected_value,
+            "reference_value": result.reference_value,
+            "ai_recommendation_attribute": result.ai_recommendation_attribute,
+            "human_decision_attribute": result.human_decision_attribute,
+            "favourable_value": result.favourable_value,
+            "conditioning_attributes": list(result.conditioning_attributes),
+            "ground_truth_attribute": result.ground_truth_attribute,
+            "exposure_attribute": result.exposure_attribute,
+            "exposure_randomized": result.exposure_randomized,
+            "appeal_attribute": result.appeal_attribute,
+            "final_decision_attribute": result.final_decision_attribute,
+            "bootstrap_cluster_attribute": result.bootstrap_cluster_attribute,
+            "materiality_threshold": result.materiality_threshold,
+            "bootstrap_iterations": result.bootstrap_iterations,
+            "confidence_level": result.confidence_level,
+        },
+        "system_name": metadata.get("system_name", "Système évalué"),
+        "system_version": metadata.get("system_version", "À compléter"),
+    }
+    audit_id = "oversight-" + hashlib.sha256(_canonical_bytes(audit_basis)).hexdigest()[:16]
+    bundle: dict[str, Any] = {
+        "schema": OVERSIGHT_EVIDENCE_SCHEMA,
+        "audit_id": audit_id,
+        "generated_at": generated_at or datetime.now(timezone.utc).isoformat(),
+        "software": {"name": "eu-ai-auditor", "version": __version__},
+        "dataset": {
+            "sha256": audit_basis["dataset_sha256"],
+            "rows": len(data),
+            "columns": len(data.columns),
+            "column_names": [str(column) for column in data.columns],
+        },
+        "metadata": metadata,
+        "results": {
+            "oversight": result.summary(),
+            "group_metrics": result.group_metrics.to_dict(orient="records"),
+            "comparisons": result.comparisons.to_dict(orient="records"),
+        },
         "artifacts": {
             "report_pdf": (
                 {

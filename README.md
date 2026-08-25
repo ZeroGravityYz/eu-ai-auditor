@@ -4,14 +4,19 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-0F766E)](https://www.python.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-132238)](LICENSE)
 
-EU AI Auditor est un package Python et une application Streamlit pour produire des preuves statistiques de biais dans les systèmes de décision. Il réunit quatre analyses dans un flux léger et reproductible :
+EU AI Auditor est un package Python et une application Streamlit pour produire des preuves statistiques et procédurales sur les systèmes de décision. Il réunit deux parcours complémentaires :
+
+- **OversightParity** suit la recommandation IA, la décision humaine, le recours et la correction afin d'auditer la fairness de la décision réellement appliquée ;
+- l'audit tabulaire classique combine CDD, proxys, quadrants d'impact et frontière performance-équité.
+
+Le parcours classique comprend :
 
 - la disparité démographique conditionnelle (CDD) proposée comme mesure descriptive par Wachter, Mittelstadt et Russell ;
 - une matrice de risque de proxys inspirée de l'approche présentée par Deloitte ;
 - les quadrants d'impact des variables protégées ;
 - une frontière performance-équité comparant régression logistique et arbre CART.
 
-Depuis la version 0.2, la CDD peut être accompagnée d'un intervalle bootstrap, et chaque exécution peut produire un manifeste JSON vérifiable contenant les empreintes du jeu de données, de la configuration, des résultats et du PDF.
+Depuis la version 0.3, OversightParity mesure le transfert de disparité entre le modèle et l'humain, les corrections utiles et erreurs introduites, l'influence différentielle de l'assistance IA, ainsi que l'équité de l'accès au recours. Chaque parcours peut produire un PDF et un manifeste JSON vérifiable.
 
 Le rapport PDF organise les résultats comme éléments de travail pour les articles 10, 11, 13 et 14 du règlement (UE) 2024/1689. Il ne certifie pas la conformité et ne remplace ni l'analyse juridique, ni l'évaluation des risques, ni la gouvernance interne.
 
@@ -26,7 +31,56 @@ pip install -e ".[dev]"
 streamlit run app.py
 ```
 
-L'application s'ouvre avec un jeu de recrutement synthétique. Il est possible de déposer un CSV, de sélectionner l'issue favorable, une classe protégée et un ou plusieurs facteurs légitimes de conditionnement `R`.
+L'application s'ouvre avec un jeu de recrutement synthétique. La page **OversightParity** dispose de son propre journal synthétique explicitement signalé et d'une interface de correspondance des étapes du processus.
+
+## OversightParity
+
+La plupart des bibliothèques s'arrêtent à la sortie du modèle. OversightParity reconstruit la chaîne complète :
+
+```text
+recommandation IA → décision humaine → recours → décision corrigée
+```
+
+Il produit notamment :
+
+- le **Fairness Transfer**, qui indique comment l'écart change entre la recommandation et la décision humaine ;
+- le **Causal Automation Bias Gap**, qui compare l'effet de rendre l'avis IA visible entre deux groupes ;
+- l'**Equitable Error Correction**, qui mesure les erreurs IA corrigées et les erreurs introduites par l'humain ;
+- la **Conditional Remedy Parity**, qui compare l'accès au recours et la correction parmi toutes les décisions initialement défavorables.
+
+Un contraste d'exposition n'est présenté comme causal que si l'utilisateur déclare une affectation randomisée documentée. Dans les autres cas, le résultat est explicitement qualifié d'association conditionnelle.
+
+```python
+import pandas as pd
+from eu_ai_auditor import calculate_oversight_parity
+
+events = pd.read_csv("journal_decisions.csv")
+result = calculate_oversight_parity(
+    events,
+    protected_attribute="genre",
+    protected_value="Femme",
+    reference_value="Homme",
+    ai_recommendation_attribute="recommandation_ia",
+    human_decision_attribute="decision_humaine",
+    favourable_value="Favorable",
+    conditioning_attributes=["diplome", "anciennete_annees"],
+    ground_truth_attribute="verite_terrain",
+    exposure_attribute="ia_visible",
+    exposed_value="Visible",
+    unexposed_value="Masquée",
+    exposure_randomized=True,
+    appeal_attribute="recours",
+    appeal_value="Oui",
+    final_decision_attribute="decision_finale",
+    bootstrap_cluster_attribute="case_id",
+    bootstrap_iterations=250,
+)
+
+print(result.metrics)
+print(result.comparisons)
+```
+
+Voir [la spécification scientifique et le schéma d'événements](docs/oversight-parity.md).
 
 ## Utilisation Python
 
@@ -81,6 +135,24 @@ Le PDF et son manifeste peuvent ensuite être contrôlés sans relancer l'audit 
 ```bash
 eu-ai-auditor-verify output/evidence/audit.json \
   --report output/pdf/rapport_audit.pdf
+```
+
+Audit de la décision réelle :
+
+```bash
+eu-ai-auditor-oversight data/oversight_demo.csv \
+  --protected genre --protected-value Femme --reference-value Homme \
+  --ai-recommendation recommandation_ia \
+  --human-decision decision_humaine --favourable-value Favorable \
+  --condition diplome --condition anciennete_annees \
+  --ground-truth verite_terrain --ground-truth-favourable-value Favorable \
+  --exposure ia_visible --exposed-value Visible --unexposed-value Masquée \
+  --randomized-exposure \
+  --appeal recours --appeal-value Oui --final-decision decision_finale \
+  --decision-timestamp decision_at --final-timestamp final_at \
+  --bootstrap-cluster case_id \
+  --output output/pdf/rapport_oversight_parity.pdf \
+  --evidence output/evidence/oversight_manifest.json
 ```
 
 ## Comment la CDD est calculée
@@ -138,9 +210,20 @@ python examples/run_case_studies.py
 
 Voir [les études de cas](docs/case-studies.md) et [les sources et licences](data/cases/SOURCES.md).
 
+### Validation humain-IA
+
+Le moteur a aussi été vérifié sur le jeu expérimental **Hybrid Hiring** de Microsoft : 38 400 jugements humains sur 9 600 tâches et sept conditions. Le script ne redistribue pas le classeur ; il télécharge l'archive officielle, contrôle son SHA-256 et conserve ensemble les bras d'une même biographie pendant le bootstrap.
+
+```bash
+pip install -e ".[research]"
+python examples/validate_hybrid_hiring.py
+```
+
+Sur les trois modèles publiés, les intervalles bootstrap du Causal Automation Bias Gap recoupent zéro. La validation démontre donc le fonctionnement du protocole sans transformer une absence de preuve en preuve d'absence. Voir [le protocole et les résultats](docs/hybrid-hiring-validation.md).
+
 ## Manifeste de preuves
 
-Le manifeste `eu-ai-auditor.evidence.v1` ne copie aucune ligne source. Il enregistre :
+Les manifestes `eu-ai-auditor.evidence.v1` et `eu-ai-auditor.oversight-evidence.v1` ne copient aucune ligne source. Ils enregistrent :
 
 - l'identifiant stable de l'audit et la version du logiciel ;
 - l'empreinte SHA-256 du DataFrame, sa forme et ses colonnes ;
@@ -155,18 +238,17 @@ Cette vérification détecte une modification ; elle ne fournit pas à elle seul
 
 EU AI Auditor ne prétend pas inventer l'audit de biais ni être la seule implémentation de la CDD. [AIF360](https://github.com/Trusted-AI/AIF360) expose déjà `conditional_demographic_disparity`, [Fairlearn](https://fairlearn.org/) couvre de nombreuses métriques de groupe et [OxonFair](https://github.com/oxfordinternetinstitute/oxonfair) traite les arbitrages d'équité.
 
-Le projet se concentre sur un parcours compact pour données tabulaires : conditionnement explicite par des facteurs `R`, détection de proxys, comparaison LR/CART, interface française et dossier de preuves orienté AI Act. Voir [l'analyse de l'écosystème](docs/landscape.md).
+Le projet se concentre sur un angle encore peu outillé : mesurer la fairness du système sociotechnique après la prédiction, notamment l'automation bias, les overrides et l'accès effectif à la correction. La recherche sur les équipes humain-IA existe déjà ; la contribution logicielle est de réunir ces mesures, le protocole expérimental et les preuves AI Act dans un package léger. Voir [l'analyse de l'écosystème](docs/landscape.md).
 
 ## Architecture
 
 ```text
-CSV
- ├─ profil de qualité et représentation
- ├─ moteur CDD
- ├─ matrice des proxys
- ├─ quadrants d'impact
- └─ comparaison LR / CART
-        └─ rapport PDF + manifeste JSON vérifiable
+CSV tabulaire                       Journal de décisions
+ ├─ qualité / représentation        ├─ recommandation IA
+ ├─ CDD et proxys                   ├─ décision humaine
+ ├─ quadrants                       ├─ recours / correction
+ └─ frontière LR / CART             └─ exposition expérimentale
+            └──────── rapport PDF + manifeste vérifiable ────────┘
 ```
 
 Le traitement ne dépend d'aucune API externe. L'application Streamlit conserve les données en mémoire le temps de la session ; la sécurité du serveur et la politique de conservation restent sous la responsabilité du déployeur.

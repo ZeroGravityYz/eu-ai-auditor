@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "eu-ai-auditor"
-version = "0.2.0"
-description = "Audit CDD, détection de proxys et dossier de preuves pour l'AI Act européen"
+version = "0.3.0"
+description = "Audit statistique et procédural des systèmes de décision assistés par IA"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "EU AI Auditor contributors" }]
-keywords = ["ai-act", "fairness", "audit", "cdd", "bias", "compliance"]
+keywords = ["ai-act", "fairness", "audit", "cdd", "human-oversight", "automation-bias"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -45,9 +45,13 @@ dev = [
   "pytest-cov>=5,<7",
   "ruff>=0.6,<1",
 ]
+research = [
+  "openpyxl>=3.1,<4",
+]
 
 [project.scripts]
 eu-ai-auditor = "eu_ai_auditor.cli:main"
+eu-ai-auditor-oversight = "eu_ai_auditor.oversight_cli:main"
 eu-ai-auditor-verify = "eu_ai_auditor.verify_cli:main"
 
 [tool.hatch.build.targets.wheel]

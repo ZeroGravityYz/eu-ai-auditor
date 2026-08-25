@@ -92,3 +92,68 @@ class TradeoffResult:
     test_rows: int
     excluded_features: tuple[str, ...]
     random_state: int
+
+
+@dataclass(frozen=True)
+class OversightResult:
+    """Fairness audit of an AI recommendation, human decision and remedy chain."""
+
+    protected_attribute: str
+    protected_value: Any
+    reference_value: Any
+    ai_recommendation_attribute: str
+    human_decision_attribute: str
+    favourable_value: Any
+    conditioning_attributes: tuple[str, ...]
+    ground_truth_attribute: str | None
+    exposure_attribute: str | None
+    exposure_randomized: bool
+    causal_interpretation: str
+    appeal_attribute: str | None
+    final_decision_attribute: str | None
+    bootstrap_cluster_attribute: str | None
+    materiality_threshold: float
+    metrics: dict[str, float | None]
+    intervals: dict[str, tuple[float, float] | None]
+    group_metrics: pd.DataFrame
+    comparisons: pd.DataFrame
+    coverage: float
+    included_rows: int
+    excluded_rows: int
+    bootstrap_iterations: int
+    bootstrap_valid_iterations: int
+    confidence_level: float | None
+    status: str
+    notes: tuple[str, ...] = ()
+
+    def summary(self) -> dict[str, Any]:
+        return {
+            "protected_attribute": self.protected_attribute,
+            "protected_value": self.protected_value,
+            "reference_value": self.reference_value,
+            "ai_recommendation_attribute": self.ai_recommendation_attribute,
+            "human_decision_attribute": self.human_decision_attribute,
+            "favourable_value": self.favourable_value,
+            "conditioning_attributes": list(self.conditioning_attributes),
+            "ground_truth_attribute": self.ground_truth_attribute,
+            "exposure_attribute": self.exposure_attribute,
+            "exposure_randomized": self.exposure_randomized,
+            "causal_interpretation": self.causal_interpretation,
+            "appeal_attribute": self.appeal_attribute,
+            "final_decision_attribute": self.final_decision_attribute,
+            "bootstrap_cluster_attribute": self.bootstrap_cluster_attribute,
+            "materiality_threshold": self.materiality_threshold,
+            "metrics": self.metrics,
+            "intervals": {
+                key: list(value) if value is not None else None
+                for key, value in self.intervals.items()
+            },
+            "coverage": self.coverage,
+            "included_rows": self.included_rows,
+            "excluded_rows": self.excluded_rows,
+            "bootstrap_iterations": self.bootstrap_iterations,
+            "bootstrap_valid_iterations": self.bootstrap_valid_iterations,
+            "confidence_level": self.confidence_level,
+            "status": self.status,
+            "notes": list(self.notes),
+        }

@@ -2,13 +2,16 @@ import json
 
 from eu_ai_auditor import (
     build_evidence_bundle,
+    build_oversight_evidence_bundle,
     calculate_cdd,
+    calculate_oversight_parity,
     calculate_proxy_matrix,
     calculate_risk_quadrants,
     dataframe_sha256,
     verify_evidence_bundle,
 )
 from eu_ai_auditor.demo import make_demo_dataset
+from eu_ai_auditor.oversight_demo import make_oversight_demo
 
 
 def _bundle(report: bytes = b"%PDF-test", signing_key: str | None = "secret"):
@@ -57,3 +60,34 @@ def test_wrong_report_is_detected():
     assert result["manifest_valid"] is True
     assert result["report_valid"] is False
     assert result["valid"] is False
+
+
+def test_oversight_evidence_is_verifiable_without_source_rows():
+    data = make_oversight_demo(rows=240)
+    result = calculate_oversight_parity(
+        data,
+        protected_attribute="genre",
+        protected_value="Femme",
+        reference_value="Homme",
+        ai_recommendation_attribute="recommandation_ia",
+        human_decision_attribute="decision_humaine",
+        favourable_value="Favorable",
+        exposure_attribute="ia_visible",
+        exposed_value="Visible",
+        unexposed_value="Masquée",
+        exposure_randomized=True,
+        min_group_count=2,
+    )
+    bundle = build_oversight_evidence_bundle(
+        data,
+        result,
+        metadata={"system_name": "Oversight test"},
+        report_bytes=b"%PDF-oversight",
+        generated_at="2026-08-25T00:00:00+00:00",
+    )
+
+    verification = verify_evidence_bundle(bundle, report_bytes=b"%PDF-oversight")
+    assert verification["valid"] is True
+    assert bundle["schema"] == "eu-ai-auditor.oversight-evidence.v1"
+    assert bundle["audit_id"].startswith("oversight-")
+    assert "source_rows" not in json.dumps(bundle)
