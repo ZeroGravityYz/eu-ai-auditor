@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from io import BytesIO
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -11,14 +10,19 @@ import streamlit as st
 
 from eu_ai_auditor import (
     build_evidence_bundle,
+    build_research_crate,
     calculate_cdd,
+    calculate_intersectional_parity,
     calculate_proxy_matrix,
     calculate_risk_quadrants,
     compare_models,
+    infer_audit_schema,
     profile_dataset,
+    read_csv_flexible,
 )
 from eu_ai_auditor.demo import make_demo_dataset
 from eu_ai_auditor.report_generator import generate_compliance_report
+from eu_ai_auditor.serialization import json_compatible
 from eu_ai_auditor.visuals import cdd_strata_chart, proxy_heatmap, quadrant_chart, tradeoff_chart
 
 st.set_page_config(
@@ -49,14 +53,7 @@ st.markdown(
 
 
 def _read_csv(uploaded) -> pd.DataFrame:
-    payload = uploaded.getvalue()
-    errors: list[str] = []
-    for encoding in ("utf-8-sig", "utf-8", "latin-1"):
-        try:
-            return pd.read_csv(BytesIO(payload), sep=None, engine="python", encoding=encoding)
-        except (UnicodeDecodeError, pd.errors.ParserError) as exc:
-            errors.append(str(exc))
-    raise ValueError("Impossible de lire le CSV. Vérifiez l'encodage et le séparateur. " + errors[-1])
+    return read_csv_flexible(uploaded.getvalue())
 
 
 def _safe_values(series: pd.Series) -> list:
@@ -101,10 +98,17 @@ if dataset.empty or len(dataset.columns) < 3:
     st.error("Le fichier doit contenir des lignes et au moins trois colonnes.")
     st.stop()
 
+schema_suggestion = infer_audit_schema(dataset, mode="classic")
+
 with st.sidebar:
     st.header("2. Paramètres")
     decision_options = list(dataset.columns)
-    decision_default = decision_options.index("selection") if use_demo and "selection" in decision_options else 0
+    suggested_decision = schema_suggestion.mapping.get("decision_attribute")
+    decision_default = (
+        decision_options.index(suggested_decision)
+        if suggested_decision in decision_options
+        else 0
+    )
     decision_attribute = st.selectbox(
         "Variable de décision", decision_options, index=decision_default
     )
@@ -112,16 +116,22 @@ with st.sidebar:
     if len(favourable_values) < 2:
         st.error("La variable de décision doit contenir au moins deux issues.")
         st.stop()
+    suggested_favourable = schema_suggestion.value_suggestions.get("favourable_value")
     favourable_default = (
-        favourable_values.index("Retenu")
-        if use_demo and "Retenu" in favourable_values
+        favourable_values.index(suggested_favourable)
+        if suggested_favourable in favourable_values
         else 0
     )
     favourable_value = st.selectbox(
         "Issue favorable", favourable_values, index=favourable_default
     )
     protected_choices = [column for column in dataset.columns if column != decision_attribute]
-    protected_default = protected_choices.index("genre") if use_demo and "genre" in protected_choices else 0
+    suggested_protected = schema_suggestion.mapping.get("protected_attribute")
+    protected_default = (
+        protected_choices.index(suggested_protected)
+        if suggested_protected in protected_choices
+        else 0
+    )
     protected_attribute = st.selectbox(
         "Variable protégée principale", protected_choices, index=protected_default
     )
@@ -148,7 +158,7 @@ with st.sidebar:
     conditioning_default = (
         [column for column in ["diplome", "anciennete_annees"] if column in condition_choices]
         if use_demo
-        else []
+        else [column for column in schema_suggestion.conditioning_candidates if column in condition_choices]
     )
     conditioning = st.multiselect(
         "Facteurs légitimes R", condition_choices, default=conditioning_default
@@ -170,10 +180,23 @@ with st.sidebar:
         confidence_level = st.select_slider(
             "Niveau de confiance", options=[0.90, 0.95, 0.99], value=0.95
         )
+        intersection_min_group_count = st.number_input(
+            "Minimum par intersection", 2, 1000, 30
+        )
+        fdr_alpha = st.select_slider(
+            "Seuil FDR intersectionnel", options=[0.01, 0.05, 0.10], value=0.05
+        )
         low_proxy = st.slider("Seuil proxy moyen", 0.01, 0.50, 0.10, 0.01)
         high_proxy = st.slider("Seuil proxy haut", low_proxy + 0.01, 0.90, 0.30, 0.01)
         mean_quadrant = st.slider("Seuil impact moyen", 0.01, 0.30, 0.05, 0.01)
         max_quadrant = st.slider("Seuil impact maximal", 0.01, 0.40, 0.10, 0.01)
+    with st.expander("Configuration automatique"):
+        for role, column in schema_suggestion.mapping.items():
+            if column:
+                st.caption(
+                    f"{role}: {column} ({schema_suggestion.confidence[role]:.0%})"
+                )
+        st.caption("Suggestions lexicales uniquement: vérifiez toujours les choix normatifs.")
     run_audit = st.button("Lancer l'audit", type="primary", width="stretch")
 
 st.caption(f"Jeu chargé: {len(dataset):,} lignes × {len(dataset.columns)} colonnes")
@@ -211,6 +234,16 @@ if run_audit:
             mean_threshold=mean_quadrant,
             max_threshold=max_quadrant,
         )
+        intersectional_result = calculate_intersectional_parity(
+            dataset,
+            protected_attributes,
+            decision_attribute,
+            favourable_value,
+            min_group_count=int(intersection_min_group_count),
+            materiality_threshold=materiality,
+            confidence_level=float(confidence_level),
+            fdr_alpha=float(fdr_alpha),
+        )
         st.session_state["audit"] = {
             "signature": (
                 decision_attribute,
@@ -218,15 +251,27 @@ if run_audit:
                 protected_attribute,
                 str(protected_value),
                 tuple(conditioning),
+                tuple(protected_attributes),
+                tuple(candidate_features),
+                float(materiality),
+                int(min_outcome_count),
                 int(bootstrap_iterations),
                 float(confidence_level),
+                int(intersection_min_group_count),
+                float(fdr_alpha),
+                float(low_proxy),
+                float(high_proxy),
+                float(mean_quadrant),
+                float(max_quadrant),
             ),
             "quality": quality,
             "cdd": cdd_result,
             "proxy": proxy_result,
             "quadrant": quadrant_result,
+            "intersectional": intersectional_result,
             "tradeoff": None,
         }
+        st.session_state.pop("research_crate", None)
     except ValueError as exc:
         st.error(str(exc))
 
@@ -244,18 +289,41 @@ current_signature = (
     protected_attribute,
     str(protected_value),
     tuple(conditioning),
+    tuple(protected_attributes),
+    tuple(candidate_features),
+    float(materiality),
+    int(min_outcome_count),
     int(bootstrap_iterations),
     float(confidence_level),
+    int(intersection_min_group_count),
+    float(fdr_alpha),
+    float(low_proxy),
+    float(high_proxy),
+    float(mean_quadrant),
+    float(max_quadrant),
 )
 if audit["signature"] != current_signature:
     st.warning("Les paramètres ont changé. Relancez l'audit pour mettre les résultats à jour.")
+    st.stop()
 
 quality = audit["quality"]
 cdd_result = audit["cdd"]
 proxy_result = audit["proxy"]
 quadrant_result = audit["quadrant"]
+intersectional_result = audit["intersectional"]
 
-tabs = st.tabs(["Vue d'ensemble", "CDD", "Proxys", "Quadrants", "Performance", "Rapport"])
+tabs = st.tabs(
+    [
+        "Vue d'ensemble",
+        "CDD",
+        "Proxys",
+        "Intersections",
+        "Quadrants",
+        "Performance",
+        "Rapport",
+        "Recherche",
+    ]
+)
 
 with tabs[0]:
     col1, col2, col3, col4 = st.columns(4)
@@ -326,6 +394,39 @@ with tabs[2]:
     st.caption("Association ne signifie pas causalité. Les seuils servent à prioriser la revue.")
 
 with tabs[3]:
+    st.subheader("Analyse intersectionnelle")
+    a, b, c = st.columns(3)
+    a.metric("Groupes éligibles", intersectional_result.eligible_groups)
+    b.metric("Priorités après FDR", intersectional_result.flagged_groups)
+    c.metric(
+        "Écart pire cas",
+        "N/D"
+        if intersectional_result.worst_case_gap is None
+        else f"{intersectional_result.worst_case_gap:.1%}",
+    )
+    if intersectional_result.flagged_groups:
+        st.warning(intersectional_result.status)
+    else:
+        st.info(intersectional_result.status)
+    st.dataframe(
+        intersectional_result.groups,
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "favourable_rate": st.column_config.NumberColumn("Taux favorable", format="percent"),
+            "confidence_low": st.column_config.NumberColumn("IC bas", format="percent"),
+            "confidence_high": st.column_config.NumberColumn("IC haut", format="percent"),
+            "gap_vs_overall": st.column_config.NumberColumn("Écart population", format="percent"),
+            "p_value": st.column_config.NumberColumn("p-value", format="%.4f"),
+            "q_value": st.column_config.NumberColumn("q-value FDR", format="%.4f"),
+        },
+    )
+    st.caption(
+        "Les intersections sont comparées au reste de la population. Les q-values corrigent les "
+        "comparaisons multiples; elles ne constituent pas un verdict juridique."
+    )
+
+with tabs[4]:
     st.subheader("Quadrants d'impact")
     figure = quadrant_chart(quadrant_result)
     st.pyplot(figure, width="content")
@@ -334,7 +435,7 @@ with tabs[3]:
     with st.expander("Détail des sous-groupes"):
         st.dataframe(quadrant_result.subgroups, width="stretch", hide_index=True)
 
-with tabs[4]:
+with tabs[5]:
     st.subheader("Frontière performance-équité")
     st.write(
         "La comparaison entraîne une régression logistique et un arbre CART sur un échantillon "
@@ -363,7 +464,7 @@ with tabs[4]:
         st.dataframe(tradeoff_result.points, width="stretch", hide_index=True)
         st.caption("La frontière n'impose aucun choix normatif. Documentez la décision finale et son responsable.")
 
-with tabs[5]:
+with tabs[6]:
     st.subheader("Dossier de preuves AI Act")
     st.markdown(
         '<div class="legal">Le PDF aide à constituer la documentation technique. Il ne certifie pas la conformité et doit être complété par les responsables juridiques, métiers, données et risques.</div>',
@@ -409,6 +510,7 @@ with tabs[5]:
                 proxy_result,
                 quadrant_result=quadrant_result,
                 tradeoff_result=audit.get("tradeoff"),
+                intersectional_result=intersectional_result,
                 metadata=metadata,
             )
             metadata["audit_id"] = prebundle["audit_id"]
@@ -418,6 +520,7 @@ with tabs[5]:
                 proxy_result,
                 quadrant_result=quadrant_result,
                 tradeoff_result=audit.get("tradeoff"),
+                intersectional_result=intersectional_result,
                 metadata=metadata,
             )
             st.download_button(
@@ -433,14 +536,92 @@ with tabs[5]:
                 proxy_result,
                 quadrant_result=quadrant_result,
                 tradeoff_result=audit.get("tradeoff"),
+                intersectional_result=intersectional_result,
                 metadata=metadata,
                 report_bytes=pdf,
             )
             st.download_button(
                 "Télécharger le manifeste de preuves JSON",
-                data=json.dumps(evidence, ensure_ascii=False, indent=2, default=str),
+                data=json.dumps(
+                    json_compatible(evidence), ensure_ascii=False, indent=2, allow_nan=False
+                ),
                 file_name="preuves_eu_ai_auditor.json",
                 mime="application/json",
             )
         except Exception as exc:  # keep the UI responsive and show a bounded failure
             st.error(f"Le rapport n'a pas pu être généré: {exc}")
+
+with tabs[7]:
+    st.subheader("Paquet de recherche reproductible")
+    st.write(
+        "Exportez la configuration, les tables de résultats, les empreintes, l'environnement logiciel, "
+        "une citation CFF et les métadonnées RO-Crate 1.3 / Croissant 1.1 dans une archive portable."
+    )
+    research_title = st.text_input("Titre du paquet", "EU AI Auditor research audit")
+    research_creator = st.text_input("Auteur ou organisation", "EU AI Auditor contributors")
+    include_source = st.checkbox(
+        "Inclure les lignes sources dans l'archive",
+        value=False,
+        help="Désactivé par défaut pour éviter de redistribuer des données personnelles ou sensibles.",
+    )
+    recipe = {
+        "protected_attributes": protected_attributes,
+        "protected_value": protected_value,
+        "decision_attribute": decision_attribute,
+        "favourable_value": favourable_value,
+        "conditioning_attributes": conditioning,
+        "materiality_threshold": materiality,
+        "min_outcome_count": int(min_outcome_count),
+        "intersection_min_group_count": int(intersection_min_group_count),
+        "bootstrap_iterations": int(bootstrap_iterations),
+        "confidence_level": float(confidence_level),
+        "fdr_alpha": float(fdr_alpha),
+    }
+    st.download_button(
+        "Télécharger la recette JSON",
+        data=json.dumps(json_compatible(recipe), ensure_ascii=False, indent=2, allow_nan=False),
+        file_name="eu_ai_auditor_recipe.json",
+        mime="application/json",
+    )
+    if st.button("Construire le RO-Crate", type="primary"):
+        try:
+            research_manifest = build_evidence_bundle(
+                dataset,
+                cdd_result,
+                proxy_result,
+                quadrant_result=quadrant_result,
+                tradeoff_result=audit.get("tradeoff"),
+                intersectional_result=intersectional_result,
+                metadata={"system_name": research_title, "protected_attributes": protected_attributes},
+            )
+            research_crate = build_research_crate(
+                dataset,
+                research_manifest,
+                audit_kind="classic-cdd",
+                config=recipe,
+                tables={
+                    "cdd_strata": cdd_result.strata,
+                    "proxy_scores": proxy_result.scores,
+                    "quadrants": quadrant_result.features,
+                    "intersectional_groups": intersectional_result.groups,
+                    **(
+                        {"tradeoff": audit["tradeoff"].points}
+                        if audit.get("tradeoff") is not None
+                        else {}
+                    ),
+                },
+                title=research_title,
+                creators=[research_creator],
+                include_source_data=include_source,
+            )
+            st.session_state["research_crate"] = research_crate
+        except Exception as exc:
+            st.error(f"Paquet de recherche impossible: {exc}")
+    if st.session_state.get("research_crate"):
+        st.download_button(
+            "Télécharger le paquet RO-Crate ZIP",
+            data=st.session_state["research_crate"],
+            file_name="eu_ai_auditor_research_crate.zip",
+            mime="application/zip",
+            type="primary",
+        )

@@ -10,10 +10,14 @@ import streamlit as st
 
 from eu_ai_auditor import (
     build_oversight_evidence_bundle,
+    build_research_crate,
     calculate_oversight_parity,
+    infer_audit_schema,
+    read_csv_flexible,
 )
 from eu_ai_auditor.oversight_demo import make_oversight_demo
 from eu_ai_auditor.oversight_report import generate_oversight_report
+from eu_ai_auditor.serialization import json_compatible
 
 st.set_page_config(page_title="OversightParity", page_icon="⚖️", layout="wide")
 
@@ -33,11 +37,7 @@ st.markdown(
 
 
 def _read_csv(uploaded) -> pd.DataFrame:
-    try:
-        return pd.read_csv(uploaded, sep=None, engine="python")
-    except (UnicodeDecodeError, pd.errors.ParserError):
-        uploaded.seek(0)
-        return pd.read_csv(uploaded, sep=";")
+    return read_csv_flexible(uploaded.getvalue())
 
 
 def _values(series: pd.Series) -> list[Any]:
@@ -93,12 +93,16 @@ if dataset.empty or len(dataset.columns) < 4:
     st.stop()
 
 columns = list(dataset.columns)
+schema_suggestion = infer_audit_schema(dataset, mode="oversight")
 with st.sidebar:
     st.header("2. Chaîne décisionnelle")
     protected_attribute = st.selectbox(
         "Attribut protégé",
         columns,
-        index=_default_index(columns, "genre"),
+        index=_default_index(
+            columns,
+            schema_suggestion.mapping.get("protected_attribute") or "genre",
+        ),
     )
     protected_values = _values(dataset[protected_attribute])
     if len(protected_values) < 2:
@@ -118,29 +122,57 @@ with st.sidebar:
     ai_column = st.selectbox(
         "Recommandation IA",
         columns,
-        index=_default_index(columns, "recommandation_ia"),
+        index=_default_index(
+            columns,
+            schema_suggestion.mapping.get("ai_recommendation_attribute") or "recommandation_ia",
+        ),
     )
     human_column = st.selectbox(
         "Décision humaine initiale",
         columns,
-        index=_default_index(columns, "decision_humaine"),
+        index=_default_index(
+            columns,
+            schema_suggestion.mapping.get("human_decision_attribute") or "decision_humaine",
+        ),
     )
     favourable_values = _values(dataset[human_column])
     favourable_value = st.selectbox(
         "Issue favorable",
         favourable_values,
-        index=favourable_values.index("Favorable") if "Favorable" in favourable_values else 0,
+        index=(
+            favourable_values.index(schema_suggestion.value_suggestions["favourable_value"])
+            if schema_suggestion.value_suggestions["favourable_value"] in favourable_values
+            else favourable_values.index("Favorable")
+            if "Favorable" in favourable_values
+            else 0
+        ),
     )
     forbidden = {protected_attribute, ai_column, human_column}
     conditioning = st.multiselect(
         "Facteurs légitimes R",
         [column for column in columns if column not in forbidden],
-        default=[column for column in ["diplome", "anciennete_annees"] if column in columns],
+        default=(
+            [column for column in ["diplome", "anciennete_annees"] if column in columns]
+            if use_demo
+            else [
+                column
+                for column in schema_suggestion.conditioning_candidates
+                if column in columns and column not in forbidden
+            ]
+        ),
     )
 
     st.header("3. Étapes optionnelles")
-    ground_truth = _optional_column("Vérité terrain", columns, "verite_terrain")
-    exposure = _optional_column("Exposition à la recommandation", columns, "ia_visible")
+    ground_truth = _optional_column(
+        "Vérité terrain",
+        columns,
+        schema_suggestion.mapping.get("ground_truth_attribute") or "verite_terrain",
+    )
+    exposure = _optional_column(
+        "Exposition à la recommandation",
+        columns,
+        schema_suggestion.mapping.get("exposure_attribute") or "ia_visible",
+    )
     exposed_value = unexposed_value = None
     if exposure:
         exposure_values = _values(dataset[exposure])
@@ -163,7 +195,11 @@ with st.sidebar:
         value=bool(use_demo and exposure),
         help="Cochez uniquement si l'affectation à la visibilité de l'IA a réellement été randomisée.",
     )
-    appeal = _optional_column("Recours / contestation", columns, "recours")
+    appeal = _optional_column(
+        "Recours / contestation",
+        columns,
+        schema_suggestion.mapping.get("appeal_attribute") or "recours",
+    )
     appeal_value = None
     if appeal:
         appeal_values = _values(dataset[appeal])
@@ -172,10 +208,26 @@ with st.sidebar:
             appeal_values,
             index=appeal_values.index("Oui") if "Oui" in appeal_values else 0,
         )
-    final_decision = _optional_column("Décision finale", columns, "decision_finale")
-    decision_timestamp = _optional_column("Horodatage initial", columns, "decision_at")
-    final_timestamp = _optional_column("Horodatage final", columns, "final_at")
-    cluster = _optional_column("Identifiant de cas pour le bootstrap", columns, "case_id")
+    final_decision = _optional_column(
+        "Décision finale",
+        columns,
+        schema_suggestion.mapping.get("final_decision_attribute") or "decision_finale",
+    )
+    decision_timestamp = _optional_column(
+        "Horodatage initial",
+        columns,
+        schema_suggestion.mapping.get("decision_timestamp_attribute") or "decision_at",
+    )
+    final_timestamp = _optional_column(
+        "Horodatage final",
+        columns,
+        schema_suggestion.mapping.get("final_timestamp_attribute") or "final_at",
+    )
+    cluster = _optional_column(
+        "Identifiant de cas pour le bootstrap",
+        columns,
+        schema_suggestion.mapping.get("cluster_attribute") or "case_id",
+    )
 
     with st.expander("Seuils et incertitude"):
         remedy_sla_days = st.number_input("Délai cible de correction (jours)", 1, 365, 30)
@@ -187,6 +239,11 @@ with st.sidebar:
         confidence_level = st.select_slider(
             "Niveau de confiance", options=[0.90, 0.95, 0.99], value=0.95
         )
+    with st.expander("Configuration automatique"):
+        for role, column in schema_suggestion.mapping.items():
+            if column:
+                st.caption(f"{role}: {column} ({schema_suggestion.confidence[role]:.0%})")
+        st.caption("Suggestions lexicales uniquement; vérifiez la sémantique et le protocole.")
     run_audit = st.button("Auditer la décision réelle", type="primary", width="stretch")
 
 st.caption(f"Journal chargé: {len(dataset):,} événements × {len(dataset.columns)} colonnes")
@@ -212,7 +269,11 @@ signature = (
     decision_timestamp,
     final_timestamp,
     cluster,
+    float(remedy_sla_days),
+    int(min_group_count),
+    float(materiality),
     int(bootstrap_iterations),
+    float(confidence_level),
 )
 
 if run_audit:
@@ -245,6 +306,7 @@ if run_audit:
                 confidence_level=float(confidence_level),
             )
         st.session_state["oversight_audit"] = {"signature": signature, "result": result}
+        st.session_state.pop("oversight_research_crate", None)
     except Exception as exc:
         st.error(str(exc))
 
@@ -254,9 +316,12 @@ if not audit:
     st.stop()
 if audit["signature"] != signature:
     st.warning("Les paramètres ont changé. Relancez l'audit pour actualiser les résultats.")
+    st.stop()
 
 result = audit["result"]
-tabs = st.tabs(["Vue d'ensemble", "Transfert", "Automation bias", "Recours", "Preuves"])
+tabs = st.tabs(
+    ["Vue d'ensemble", "Transfert", "Automation bias", "Recours", "Preuves", "Recherche"]
+)
 
 with tabs[0]:
     c1, c2, c3, c4 = st.columns(4)
@@ -394,9 +459,83 @@ with tabs[4]:
             )
             st.download_button(
                 "Télécharger le manifeste JSON",
-                data=json.dumps(evidence, ensure_ascii=False, indent=2, default=str),
+                data=json.dumps(
+                    json_compatible(evidence), ensure_ascii=False, indent=2, allow_nan=False
+                ),
                 file_name="preuves_oversight_parity.json",
                 mime="application/json",
             )
         except Exception as exc:
             st.error(f"Génération impossible: {exc}")
+
+with tabs[5]:
+    st.subheader("Paquet de recherche reproductible")
+    st.write(
+        "Archivez les métriques, la configuration exacte, l'environnement logiciel, une citation CFF "
+        "et des métadonnées RO-Crate 1.3 / Croissant 1.1. Les lignes sources sont exclues par défaut."
+    )
+    crate_title = st.text_input("Titre du paquet de supervision", "OversightParity research audit")
+    crate_creator = st.text_input("Auteur ou organisation du paquet", "EU AI Auditor contributors")
+    include_source = st.checkbox(
+        "Inclure les événements sources",
+        value=False,
+        help="À activer uniquement si leur redistribution est autorisée et sûre.",
+    )
+    recipe = {
+        "protected_attribute": protected_attribute,
+        "protected_value": protected_value,
+        "reference_value": reference_value,
+        "ai_recommendation_attribute": ai_column,
+        "human_decision_attribute": human_column,
+        "favourable_value": favourable_value,
+        "conditioning_attributes": conditioning,
+        "ground_truth_attribute": ground_truth,
+        "exposure_attribute": exposure,
+        "exposure_randomized": exposure_randomized,
+        "appeal_attribute": appeal,
+        "final_decision_attribute": final_decision,
+        "bootstrap_cluster_attribute": cluster,
+        "remedy_sla_days": float(remedy_sla_days),
+        "min_group_count": int(min_group_count),
+        "materiality_threshold": float(materiality),
+        "bootstrap_iterations": int(bootstrap_iterations),
+        "confidence_level": float(confidence_level),
+    }
+    st.download_button(
+        "Télécharger la recette OversightParity",
+        data=json.dumps(json_compatible(recipe), ensure_ascii=False, indent=2, allow_nan=False),
+        file_name="oversight_parity_recipe.json",
+        mime="application/json",
+    )
+    if st.button("Construire le RO-Crate OversightParity", type="primary"):
+        try:
+            manifest = build_oversight_evidence_bundle(
+                dataset,
+                result,
+                metadata={"system_name": crate_title},
+            )
+            crate = build_research_crate(
+                dataset,
+                manifest,
+                audit_kind="oversight-parity",
+                config=recipe,
+                tables={
+                    "oversight_comparisons": result.comparisons,
+                    "oversight_group_metrics": result.group_metrics,
+                },
+                title=crate_title,
+                description="AI recommendation, human decision, appeal and remedy fairness evidence.",
+                creators=[crate_creator],
+                include_source_data=include_source,
+            )
+            st.session_state["oversight_research_crate"] = crate
+        except Exception as exc:
+            st.error(f"Paquet de recherche impossible: {exc}")
+    if st.session_state.get("oversight_research_crate"):
+        st.download_button(
+            "Télécharger le RO-Crate OversightParity",
+            data=st.session_state["oversight_research_crate"],
+            file_name="oversight_parity_research_crate.zip",
+            mime="application/zip",
+            type="primary",
+        )

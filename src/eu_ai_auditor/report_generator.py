@@ -29,7 +29,7 @@ from reportlab.platypus import (
 
 from .data_quality import profile_dataset
 from .evidence import dataframe_sha256
-from .models import CDDResult, ProxyMatrixResult, QuadrantResult, TradeoffResult
+from .models import CDDResult, IntersectionalResult, ProxyMatrixResult, QuadrantResult, TradeoffResult
 from .version import __version__
 from .visuals import cdd_strata_chart, proxy_heatmap, quadrant_chart, tradeoff_chart
 
@@ -228,6 +228,7 @@ def generate_compliance_report(
     *,
     quadrant_result: QuadrantResult | None = None,
     tradeoff_result: TradeoffResult | None = None,
+    intersectional_result: IntersectionalResult | None = None,
     metadata: dict[str, Any] | None = None,
     output_path: str | Path | None = None,
 ) -> bytes:
@@ -507,9 +508,76 @@ def generate_compliance_report(
         )
     )
 
+    if intersectional_result is not None:
+        story.append(PageBreak())
+        story.append(_p("6. Analyse intersectionnelle", styles["h1"]))
+        story.append(
+            _p(
+                "Chaque intersection observée est comparée au reste de la population. Les intervalles "
+                "de Wilson rendent visibles les petits effectifs et les q-values de Benjamini-Hochberg "
+                "limitent le taux de fausses découvertes sur l'ensemble des comparaisons. Cette analyse "
+                "reste exploratoire et ne remplace ni la contextualisation ni l'examen juridique.",
+                styles["body"],
+            )
+        )
+        intersection_summary = pd.DataFrame(
+            [
+                ["Attributs combinés", ", ".join(intersectional_result.protected_attributes)],
+                ["Groupes éligibles", intersectional_result.eligible_groups],
+                ["Groupes prioritaires", intersectional_result.flagged_groups],
+                ["Écart pire cas", _format_percent(intersectional_result.worst_case_gap)],
+                ["Couverture", _format_percent(intersectional_result.coverage)],
+                ["Statut", intersectional_result.status],
+            ],
+            columns=["Mesure", "Valeur"],
+        )
+        story.append(_dataframe_table(intersection_summary, styles, widths=[49 * mm, 104 * mm]))
+        intersection_groups = intersectional_result.groups.head(20).copy()
+        intersection_groups["interval"] = intersection_groups.apply(
+            lambda row: f"[{row['confidence_low']:.1%} ; {row['confidence_high']:.1%}]", axis=1
+        )
+        intersection_groups["review_priority"] = intersection_groups["review_priority"].map(
+            {True: "À examiner", False: "Non"}
+        )
+        intersection_groups = intersection_groups[
+            [
+                "group",
+                "n",
+                "favourable_rate",
+                "interval",
+                "gap_vs_overall",
+                "q_value",
+                "review_priority",
+            ]
+        ]
+        story.extend(
+            [
+                _p("Intersections observées", styles["h2"]),
+                _dataframe_table(
+                    intersection_groups,
+                    styles,
+                    headers=["Intersection", "n", "Taux", "IC", "Écart", "q-value", "Priorité"],
+                    widths=[43 * mm, 12 * mm, 19 * mm, 33 * mm, 19 * mm, 18 * mm, 23 * mm],
+                ),
+            ]
+        )
+    else:
+        story.extend(
+            [
+                PageBreak(),
+                _p("6. Analyse intersectionnelle", styles["h1"]),
+                _p(
+                    "Analyse non fournie pour cette exécution. Ajoutez tous les attributs protégés "
+                    "pertinents et conservez les effectifs de chaque intersection afin d'éviter qu'un "
+                    "résultat agrégé masque un sous-groupe exposé.",
+                    styles["body"],
+                ),
+            ]
+        )
+
     if quadrant_result is not None:
         story.append(PageBreak())
-        story.append(_p("6. Quadrants d'impact", styles["h1"]))
+        story.append(_p("7. Quadrants d'impact", styles["h1"]))
         story.append(
             _p(
                 "L'écart de résultat d'un sous-groupe est son taux d'issue favorable moins le taux de la "
@@ -532,7 +600,7 @@ def generate_compliance_report(
         story.append(
             KeepTogether(
                 [
-                    _p("7. Arbitrage performance - équité", styles["h1"]),
+                    _p("8. Arbitrage performance - équité", styles["h1"]),
                     _p(
                 "Chaque point provient d'un échantillon de test distinct de l'entraînement. La frontière "
                 "de Pareto montre les points qu'aucun autre point ne surpasse simultanément en exactitude "
@@ -554,9 +622,20 @@ def generate_compliance_report(
                 headers=["Modèle", "Configuration", "Seuil", "Exactitude", "CDD", "Couverture"],
             )
         )
+    else:
+        story.extend(
+            [
+                _p("8. Arbitrage performance - équité", styles["h1"]),
+                _p(
+                    "Comparaison LR/CART non demandée pour cette exécution. Aucun compromis entre "
+                    "performance prédictive et coût d'équité n'est donc présenté dans ce dossier.",
+                    styles["body"],
+                ),
+            ]
+        )
 
     story.append(PageBreak())
-    story.append(_p("8. Article 11 et annexe IV - État du dossier", styles["h1"]))
+    story.append(_p("9. Article 11 et annexe IV - État du dossier", styles["h1"]))
     checklist = [
         ("Description générale, finalité, fournisseur, version", ["system_name", "intended_purpose", "provider_name", "system_version"]),
         ("Architecture, composants, ressources et interfaces", ["architecture"]),
@@ -589,7 +668,7 @@ def generate_compliance_report(
         )
     )
 
-    story.append(_p("9. Article 13 - Transparence et instructions d'utilisation", styles["h1"]))
+    story.append(_p("10. Article 13 - Transparence et instructions d'utilisation", styles["h1"]))
     transparency_rows = pd.DataFrame(
         [
             ["Finalité prévue", metadata.get("intended_purpose", "À compléter")],
@@ -603,7 +682,7 @@ def generate_compliance_report(
     )
     story.append(_dataframe_table(transparency_rows, styles, widths=[52 * mm, 101 * mm]))
 
-    story.append(_p("10. Article 14 - Supervision humaine", styles["h1"]))
+    story.append(_p("11. Article 14 - Supervision humaine", styles["h1"]))
     oversight = metadata.get("human_oversight", "À compléter: rôles, compétences, autorité et disponibilité du superviseur.")
     story.append(_p(str(oversight), styles["body"]))
     for action in [
@@ -616,7 +695,7 @@ def generate_compliance_report(
         story.append(_p("- " + action, styles["body"]))
 
     story.append(PageBreak())
-    story.append(_p("11. Annexe - Limites, références et validation", styles["h1"]))
+    story.append(_p("12. Annexe - Limites, références et validation", styles["h1"]))
     for limitation in [
         "CDD ne détermine ni l'illégalité d'un écart, ni sa justification, ni sa causalité.",
         "Les facteurs R et les groupes comparateurs impliquent des choix juridiques et contextuels.",

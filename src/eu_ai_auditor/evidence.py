@@ -10,7 +10,15 @@ from typing import Any
 
 import pandas as pd
 
-from .models import CDDResult, OversightResult, ProxyMatrixResult, QuadrantResult, TradeoffResult
+from .models import (
+    CDDResult,
+    IntersectionalResult,
+    OversightResult,
+    ProxyMatrixResult,
+    QuadrantResult,
+    TradeoffResult,
+)
+from .serialization import json_compatible
 from .version import __version__
 
 EVIDENCE_SCHEMA = "eu-ai-auditor.evidence.v1"
@@ -19,7 +27,8 @@ OVERSIGHT_EVIDENCE_SCHEMA = "eu-ai-auditor.oversight-evidence.v1"
 
 def _canonical_bytes(value: Any) -> bytes:
     return json.dumps(
-        value,
+        json_compatible(value),
+        allow_nan=False,
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
@@ -45,6 +54,7 @@ def _result_payload(
     proxy_result: ProxyMatrixResult,
     quadrant_result: QuadrantResult | None,
     tradeoff_result: TradeoffResult | None,
+    intersectional_result: IntersectionalResult | None,
 ) -> dict[str, Any]:
     return {
         "cdd": cdd_result.summary(),
@@ -53,6 +63,14 @@ def _result_payload(
             quadrant_result.features.to_dict(orient="records") if quadrant_result else None
         ),
         "tradeoff": tradeoff_result.points.to_dict(orient="records") if tradeoff_result else None,
+        "intersectional": (
+            {
+                "summary": intersectional_result.summary(),
+                "groups": intersectional_result.groups.to_dict(orient="records"),
+            }
+            if intersectional_result
+            else None
+        ),
     }
 
 
@@ -63,6 +81,7 @@ def build_evidence_bundle(
     *,
     quadrant_result: QuadrantResult | None = None,
     tradeoff_result: TradeoffResult | None = None,
+    intersectional_result: IntersectionalResult | None = None,
     metadata: dict[str, Any] | None = None,
     report_bytes: bytes | None = None,
     generated_at: str | None = None,
@@ -75,7 +94,15 @@ def build_evidence_bundle(
     """
 
     metadata = dict(metadata or {})
-    results = _result_payload(cdd_result, proxy_result, quadrant_result, tradeoff_result)
+    results = _result_payload(
+        cdd_result,
+        proxy_result,
+        quadrant_result,
+        tradeoff_result,
+        intersectional_result,
+    )
+    metadata = json_compatible(metadata)
+    results = json_compatible(results)
     audit_basis = {
         "dataset_sha256": dataframe_sha256(data),
         "configuration": {
@@ -194,6 +221,7 @@ def build_oversight_evidence_bundle(
             )
         },
     }
+    bundle = json_compatible(bundle)
     manifest_sha256 = hashlib.sha256(_canonical_bytes(bundle)).hexdigest()
     integrity: dict[str, Any] = {
         "canonicalization": "JSON UTF-8, sorted keys, compact separators",

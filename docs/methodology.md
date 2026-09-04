@@ -28,7 +28,21 @@ Une valeur positive de `D_R - A_R` est un signal directionnel défavorable à la
 
 La littérature CDD insiste sur ce troisième point : l'outil décrit l'ampleur et la structure de l'écart pour guider une investigation contextuelle.
 
-## 2. Matrice des proxys
+## 2. Analyse intersectionnelle
+
+L'analyse intersectionnelle décrit chaque combinaison observée des attributs protégés sélectionnés. Pour chaque groupe, le moteur calcule l'effectif, le nombre d'issues favorables, le taux d'issue favorable et un intervalle de Wilson. Les lignes dont une valeur protégée manque sont exclues du dénominateur complet-case ; leur nombre reste consigné dans le résultat.
+
+Chaque groupe éligible est comparé au reste de la population complète-case par un test exact bilatéral de Fisher. Les valeurs p sont ensuite corrigées ensemble par la procédure de Benjamini-Hochberg. Une priorité de revue n'est déclenchée que si trois conditions sont réunies :
+
+1. l'effectif du groupe atteint le minimum configuré ;
+2. l'écart absolu au taux global atteint le seuil de matérialité ;
+3. la valeur q est inférieure ou égale au niveau FDR configuré.
+
+Les groupes trop petits restent visibles mais ne reçoivent ni valeur p ni valeur q. Cette convention évite de transformer une puissance statistique insuffisante en conclusion rassurante. L'écart extrême est la différence entre les taux maximal et minimal parmi les groupes éligibles.
+
+Les comparaisons groupe-contre-reste se chevauchent et ne sont donc pas indépendantes. Benjamini-Hochberg limite la proportion attendue de fausses découvertes dans la famille testée, mais ne corrige ni la sélection des variables, ni les erreurs de mesure, ni la multiplicité de plusieurs audits successifs.
+
+## 3. Matrice des proxys
 
 Les associations sont calculées sur les paires complètes :
 
@@ -38,7 +52,7 @@ Les associations sont calculées sur les paires complètes :
 
 Les scores sont normalisés entre 0 et 1. Ils ne sont pas directement comparables comme estimateurs causaux. Les catégories faible, moyen et haut servent à classer l'ordre de revue. Une investigation de proxy doit ensuite considérer la nécessité métier, la causalité, les interactions du modèle et le contexte juridique.
 
-## 3. Quadrants d'impact
+## 4. Quadrants d'impact
 
 Pour chaque valeur d'une variable protégée, l'écart de résultat vaut :
 
@@ -53,7 +67,7 @@ Le point de chaque variable protégée utilise :
 
 Deux seuils configurables séparent impact faible, impact élevé, sous-groupes marginalisés et biais extrême. Ces libellés suivent le cadre visuel de Deloitte ; ils restent des catégories de priorisation.
 
-## 4. Frontière performance-équité
+## 5. Frontière performance-équité
 
 Les variables protégées sont retirées des entrées du modèle. Le module sépare les données en entraînement et test, ajuste plusieurs régressions logistiques et arbres CART, puis évalue plusieurs seuils de décision.
 
@@ -61,13 +75,21 @@ La performance est l'exactitude équilibrée. Le coût d'équité est la valeur 
 
 La frontière rend l'arbitrage visible. Elle ne recommande aucun point et ne fixe aucune pondération entre les objectifs.
 
-## 5. Traçabilité et intégrité
+## 6. Traçabilité et intégrité
 
 Le manifeste versionné contient une empreinte du DataFrame construite à partir de l'ordre des colonnes, des types, de l'index et du hachage des valeurs. Le PDF est protégé par sa propre empreinte SHA-256. Le manifeste retire son bloc `integrity`, sérialise le reste en JSON canonique puis calcule son empreinte.
 
 Une clé fournie par l'opérateur peut ajouter un HMAC-SHA256. La clé n'est jamais écrite dans le manifeste. Cette méthode permet de détecter une altération et d'attester la possession d'un secret partagé ; elle ne remplace pas une signature électronique qualifiée, une infrastructure de clés publiques, un horodatage de confiance ou une politique de conservation.
 
-## 6. Menaces à la validité
+## 7. Objet de recherche portable
+
+L'export de recherche assemble la configuration exacte, les résultats tabulaires, le manifeste de preuve, l'environnement logiciel et les métadonnées dans une archive ZIP structurée comme un RO-Crate 1.3. Un fichier Croissant 1.1 décrit le schéma du jeu de données et `CITATION.cff` rend le logiciel citable.
+
+Les données sources sont absentes par défaut. Si l'opérateur choisit explicitement de les inclure, leur copie CSV est ajoutée et référencée dans les métadonnées. Le fichier `checksums.sha256` couvre les charges utiles ; le vérificateur contrôle également les chemins, les doublons, le JSON du crate et l'intégrité du manifeste.
+
+Une empreinte ne garantit pas à elle seule l'authenticité, la confidentialité, l'archivage à long terme ou la reproductibilité sémantique. Le protocole permet surtout de détecter les divergences et de transmettre les choix d'audit sans dépendre de l'interface graphique.
+
+## 8. Menaces à la validité
 
 - choix inadéquat ou contestable des facteurs `R` ;
 - échantillons trop petits, non représentatifs ou avec données manquantes non aléatoires ;
@@ -77,3 +99,5 @@ Une clé fournie par l'opérateur peut ajouter un HMAC-SHA256. La clé n'est jam
 - multiples analyses exploratoires créant des signaux fortuits ;
 - confusion entre une mesure sur les données historiques et les effets réels du système.
 - dépendance du bootstrap à l'hypothèse que les lignes observées sont une approximation pertinente de la population auditée.
+- dépendance entre comparaisons intersectionnelles et inflation du risque d'erreur si plusieurs configurations sont explorées sans protocole préalable.
+- risque de réidentification lors de l'export de petits groupes, même lorsque les lignes sources ne sont pas incluses.

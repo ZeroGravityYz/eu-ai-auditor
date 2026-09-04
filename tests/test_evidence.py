@@ -33,7 +33,7 @@ def _bundle(report: bytes = b"%PDF-test", signing_key: str | None = "secret"):
 
 def test_evidence_bundle_survives_json_roundtrip_and_verifies():
     data, bundle = _bundle()
-    serialized = json.dumps(bundle, ensure_ascii=False, default=str)
+    serialized = json.dumps(bundle, ensure_ascii=False, allow_nan=False)
     restored = json.loads(serialized)
     result = verify_evidence_bundle(restored, report_bytes=b"%PDF-test", signing_key="secret")
 

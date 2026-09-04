@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "eu-ai-auditor"
-version = "0.3.0"
-description = "Audit statistique et procédural des systèmes de décision assistés par IA"
+version = "0.4.0"
+description = "Audit reproductible, intersectionnel et procédural des systèmes de décision assistés par IA"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "EU AI Auditor contributors" }]
-keywords = ["ai-act", "fairness", "audit", "cdd", "human-oversight", "automation-bias"]
+keywords = ["ai-act", "fairness", "audit", "cdd", "intersectionality", "human-oversight", "ro-crate"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -52,6 +52,7 @@ research = [
 [project.scripts]
 eu-ai-auditor = "eu_ai_auditor.cli:main"
 eu-ai-auditor-oversight = "eu_ai_auditor.oversight_cli:main"
+eu-ai-auditor-research = "eu_ai_auditor.research_cli:main"
 eu-ai-auditor-verify = "eu_ai_auditor.verify_cli:main"
 
 [tool.hatch.build.targets.wheel]
@@ -69,3 +70,19 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src/eu_ai_auditor",
+  "/app.py",
+  "/pages/2_OversightParity.py",
+  "/pages/3_Research_Workbench.py",
+  "/README.md",
+  "/LICENSE",
+  "/CITATION.cff",
+  "/CHANGELOG.md",
+  "/docs",
+  "/data/cases",
+  "/data/oversight_demo.csv",
+  "/data/recrutement_demo.csv",
+]

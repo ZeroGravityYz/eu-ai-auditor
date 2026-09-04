@@ -157,3 +157,48 @@ class OversightResult:
             "status": self.status,
             "notes": list(self.notes),
         }
+
+
+@dataclass(frozen=True)
+class IntersectionalResult:
+    """Outcome-parity audit across one or more intersecting attributes."""
+
+    protected_attributes: tuple[str, ...]
+    decision_attribute: str
+    favourable_value: Any
+    overall_favourable_rate: float
+    materiality_threshold: float
+    confidence_level: float
+    fdr_alpha: float
+    groups: pd.DataFrame
+    eligible_groups: int
+    flagged_groups: int
+    coverage: float
+    included_rows: int
+    excluded_rows: int
+    worst_case_gap: float | None
+    lowest_rate_group: str | None
+    highest_rate_group: str | None
+    status: str
+    notes: tuple[str, ...] = ()
+
+    def summary(self) -> dict[str, Any]:
+        return {
+            "protected_attributes": list(self.protected_attributes),
+            "decision_attribute": self.decision_attribute,
+            "favourable_value": self.favourable_value,
+            "overall_favourable_rate": self.overall_favourable_rate,
+            "materiality_threshold": self.materiality_threshold,
+            "confidence_level": self.confidence_level,
+            "fdr_alpha": self.fdr_alpha,
+            "eligible_groups": self.eligible_groups,
+            "flagged_groups": self.flagged_groups,
+            "coverage": self.coverage,
+            "included_rows": self.included_rows,
+            "excluded_rows": self.excluded_rows,
+            "worst_case_gap": self.worst_case_gap,
+            "lowest_rate_group": self.lowest_rate_group,
+            "highest_rate_group": self.highest_rate_group,
+            "status": self.status,
+            "notes": list(self.notes),
+        }

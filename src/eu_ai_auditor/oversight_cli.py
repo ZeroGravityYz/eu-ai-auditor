@@ -10,9 +10,11 @@ from typing import Any
 
 import pandas as pd
 
+from .csv_io import read_csv_flexible
 from .evidence import build_oversight_evidence_bundle
 from .oversight import calculate_oversight_parity
 from .oversight_report import generate_oversight_report
+from .serialization import json_compatible
 
 
 def _match_value(series: pd.Series, raw: str) -> Any:
@@ -82,7 +84,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    data = pd.read_csv(args.csv, sep=None, engine="python")
+    data = read_csv_flexible(args.csv)
     protected_value = _match_value(data[args.protected], args.protected_value)
     reference_value = _match_value(data[args.protected], args.reference_value)
     favourable_value = _match_value(data[args.human_decision], args.favourable_value)
@@ -153,7 +155,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args.evidence.parent.mkdir(parents=True, exist_ok=True)
     args.evidence.write_text(
-        json.dumps(evidence, ensure_ascii=False, indent=2, default=str), encoding="utf-8"
+        json.dumps(json_compatible(evidence), ensure_ascii=False, indent=2, allow_nan=False),
+        encoding="utf-8",
     )
     print(f"Rapport OversightParity créé: {args.output.resolve()}")
     print(f"Manifeste créé: {args.evidence.resolve()}")

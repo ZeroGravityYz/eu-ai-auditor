@@ -1,5 +1,7 @@
 # EU AI Auditor
 
+> [English documentation](docs/README.en.md) · [Research workflow](docs/research-workbench.md) · [Scientific methodology](docs/methodology.md)
+
 [![CI](https://github.com/ZeroGravityYz/eu-ai-auditor/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroGravityYz/eu-ai-auditor/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-0F766E)](https://www.python.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-132238)](LICENSE)
@@ -16,7 +18,7 @@ Le parcours classique comprend :
 - les quadrants d'impact des variables protégées ;
 - une frontière performance-équité comparant régression logistique et arbre CART.
 
-Depuis la version 0.3, OversightParity mesure le transfert de disparité entre le modèle et l'humain, les corrections utiles et erreurs introduites, l'influence différentielle de l'assistance IA, ainsi que l'équité de l'accès au recours. Chaque parcours peut produire un PDF et un manifeste JSON vérifiable.
+Depuis la version 0.4, le projet ajoute un laboratoire bilingue, une configuration assistée, l'analyse intersectionnelle avec correction des comparaisons multiples et des paquets de recherche RO-Crate vérifiables. OversightParity mesure toujours le transfert de disparité entre le modèle et l'humain, les corrections utiles et erreurs introduites, l'influence différentielle de l'assistance IA, ainsi que l'équité de l'accès au recours.
 
 Le rapport PDF organise les résultats comme éléments de travail pour les articles 10, 11, 13 et 14 du règlement (UE) 2024/1689. Il ne certifie pas la conformité et ne remplace ni l'analyse juridique, ni l'évaluation des risques, ni la gouvernance interne.
 
@@ -32,6 +34,32 @@ streamlit run app.py
 ```
 
 L'application s'ouvre avec un jeu de recrutement synthétique. La page **OversightParity** dispose de son propre journal synthétique explicitement signalé et d'une interface de correspondance des étapes du processus.
+
+## Research Workbench — parcours international
+
+La page **Research Workbench** propose une interface guidée en anglais et en français :
+
+- reconnaissance prudente des colonnes de décision, attributs protégés et facteurs potentiels `R` ;
+- validation humaine obligatoire des choix normatifs ;
+- analyse de plusieurs attributs et de leurs intersections ;
+- intervalles de Wilson, tests exacts de Fisher et q-values de Benjamini-Hochberg ;
+- export sans données sources par défaut d'un ZIP conforme à **RO-Crate 1.3**, avec métadonnées **Croissant 1.1**, tables CSV ordonnées, configuration, environnement logiciel, empreintes et `CITATION.cff`.
+
+L'inférence de schéma facilite la configuration mais ne choisit jamais automatiquement un groupe protégé ou de référence. Elle utilise uniquement les noms, types et cardinalités des colonnes.
+
+```python
+from eu_ai_auditor import infer_audit_schema, calculate_intersectional_parity
+
+suggestion = infer_audit_schema(data, mode="classic")
+result = calculate_intersectional_parity(
+    data,
+    protected_attributes=["gender", "age_band"],
+    decision_attribute="approved",
+    favourable_value=True,
+    min_group_count=30,
+)
+print(result.groups)
+```
 
 ## OversightParity
 
@@ -155,6 +183,25 @@ eu-ai-auditor-oversight data/oversight_demo.csv \
   --evidence output/evidence/oversight_manifest.json
 ```
 
+Créer aussi un paquet de recherche reproductible :
+
+```bash
+eu-ai-auditor data/recrutement_demo.csv \
+  --protected genre --protected-value Femme \
+  --additional-protected tranche_age \
+  --decision selection --favourable-value Retenu \
+  --condition diplome \
+  --research-bundle output/research/audit-ro-crate.zip
+
+eu-ai-auditor-research verify output/research/audit-ro-crate.zip
+```
+
+Une recette JSON téléchargée depuis l'interface peut relancer exactement le parcours :
+
+```bash
+eu-ai-auditor-research run data.csv audit-recipe.json --output-dir output/replayed
+```
+
 ## Comment la CDD est calculée
 
 Pour chaque strate légitime `R`, le moteur calcule :
@@ -234,11 +281,17 @@ Les manifestes `eu-ai-auditor.evidence.v1` et `eu-ai-auditor.oversight-evidence.
 
 Cette vérification détecte une modification ; elle ne fournit pas à elle seule une identité de signataire, un horodatage qualifié ou une certification réglementaire.
 
+## Paquet de recherche interopérable
+
+Le RO-Crate contient des résultats en format tabulaire stable et lisible depuis Python, R, Julia ou un tableur. Les données sources ne sont ajoutées que sur demande explicite. `checksums.sha256` protège chaque fichier utile ; `ro-crate-metadata.json` décrit la provenance et `metadata/croissant.json` décrit le schéma du jeu audité. Le paquet se vérifie sans relancer les calculs.
+
+Le dépôt fournit aussi [`CITATION.cff`](CITATION.cff), rendu directement par GitHub pour faciliter la citation du logiciel.
+
 ## Positionnement
 
 EU AI Auditor ne prétend pas inventer l'audit de biais ni être la seule implémentation de la CDD. [AIF360](https://github.com/Trusted-AI/AIF360) expose déjà `conditional_demographic_disparity`, [Fairlearn](https://fairlearn.org/) couvre de nombreuses métriques de groupe et [OxonFair](https://github.com/oxfordinternetinstitute/oxonfair) traite les arbitrages d'équité.
 
-Le projet se concentre sur un angle encore peu outillé : mesurer la fairness du système sociotechnique après la prédiction, notamment l'automation bias, les overrides et l'accès effectif à la correction. La recherche sur les équipes humain-IA existe déjà ; la contribution logicielle est de réunir ces mesures, le protocole expérimental et les preuves AI Act dans un package léger. Voir [l'analyse de l'écosystème](docs/landscape.md).
+Le projet se concentre sur un angle encore peu outillé : relier dans un même objet vérifiable la disparité conditionnelle, les intersections, la décision humaine réelle, les overrides et l'accès effectif à la correction. La recherche et d'autres bibliothèques existent déjà ; la contribution logicielle est leur orchestration transparente, reproductible et orientée audit. Aucune revendication d'unicité absolue n'est faite sans étude d'antériorité. Voir [l'analyse de l'écosystème](docs/landscape.md).
 
 ## Architecture
 
@@ -270,6 +323,9 @@ Les corrections doivent inclure un test de non-régression et préserver la dist
 - [Règlement (UE) 2024/1689 - texte officiel EUR-Lex](https://eur-lex.europa.eu/eli/reg/2024/1689/oj)
 - [Wachter, Mittelstadt et Russell, *Why Fairness Cannot Be Automated*](https://arxiv.org/abs/2005.05906)
 - [Deloitte, *Striving for fairness in AI models*](https://www.deloitte.com/content/dam/assets-zone2/de/de/docs/products/2024/Deloitte_Trustworthy20AI_Fairness_Whitepaper_Dec2021.pdf)
+- [Fairlearn, *Intersecting groups*](https://fairlearn.org/main/user_guide/assessment/intersecting_groups.html)
+- [RO-Crate Metadata Specification 1.3](https://www.researchobject.org/ro-crate/specification/1.3/)
+- [MLCommons Croissant 1.1](https://docs.mlcommons.org/croissant/docs/croissant-spec-1.1.html)
 
 ## Licence
 
