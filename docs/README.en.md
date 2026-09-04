@@ -7,6 +7,7 @@ EU AI Auditor is a Python package and Streamlit application for reproducible sta
 - Conditional Demographic Disparity (CDD) with explicit conditioning factors and bootstrap intervals.
 - Proxy association screening using Pearson correlation, corrected Cramér's V and correlation ratio eta.
 - Intersectional outcome analysis with Wilson intervals, Fisher exact tests and Benjamini-Hochberg false-discovery-rate control.
+- A bounded fairness multiverse that tests whether the CDD conclusion survives alternative pre-declared conditioning choices.
 - OversightParity for AI recommendation, human decision, appeal, correction and differential automation-bias analysis.
 - Performance/fairness operating points for logistic regression and CART.
 - PDF evidence reports and integrity-verifiable JSON manifests.
@@ -29,6 +30,7 @@ Open **Research Workbench** for the bilingual guided workflow. It recognizes com
 import pandas as pd
 from eu_ai_auditor import (
     calculate_cdd,
+    calculate_fairness_stability,
     calculate_intersectional_parity,
     infer_audit_schema,
 )
@@ -54,6 +56,18 @@ intersections = calculate_intersectional_parity(
     min_group_count=30,
 )
 print(intersections.groups)
+
+stability = calculate_fairness_stability(
+    data,
+    protected_attribute="gender",
+    protected_value="woman",
+    decision_attribute="approved",
+    favourable_value=True,
+    conditioning_candidates=["qualification", "experience"],
+    max_conditioning_factors=2,
+)
+print(stability.summary())
+print(stability.factor_effects)
 ```
 
 ## Reproducible research package
@@ -81,11 +95,12 @@ Raw source rows are excluded from research packages by default. The ZIP contains
 
 - A detected gap is evidence for investigation, not proof of causality or unlawful discrimination.
 - Conditioning variables encode contextual and often legal judgments. They must be justified outside the software.
+- Stability measures the robustness of an audit conclusion to declared specifications, not causal identification, legal compliance or the technical robustness required by AI Act Article 15.
 - Small intersections remain visible but are excluded from inferential claims below the configured minimum count.
 - FDR correction reduces false discoveries across tested groups but does not remove measurement, sampling or construct-validity problems.
 - A differential exposure estimate is called causal only when the user declares and documents randomized AI visibility.
 
-Read the [research workflow](research-workbench.md), [methodology](methodology.md), [OversightParity specification](oversight-parity.md) and [AI Act mapping](ai-act-mapping.md).
+Read the [research workflow](research-workbench.md), [fairness multiverse specification](fairness-multiverse.md), [methodology](methodology.md), [OversightParity specification](oversight-parity.md) and [AI Act mapping](ai-act-mapping.md).
 
 ## Citation and license
 

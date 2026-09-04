@@ -12,6 +12,7 @@ from eu_ai_auditor import (
     build_evidence_bundle,
     build_research_crate,
     calculate_cdd,
+    calculate_fairness_stability,
     calculate_intersectional_parity,
     calculate_proxy_matrix,
     calculate_risk_quadrants,
@@ -23,7 +24,13 @@ from eu_ai_auditor import (
 from eu_ai_auditor.demo import make_demo_dataset
 from eu_ai_auditor.report_generator import generate_compliance_report
 from eu_ai_auditor.serialization import json_compatible
-from eu_ai_auditor.visuals import cdd_strata_chart, proxy_heatmap, quadrant_chart, tradeoff_chart
+from eu_ai_auditor.visuals import (
+    cdd_strata_chart,
+    proxy_heatmap,
+    quadrant_chart,
+    stability_curve,
+    tradeoff_chart,
+)
 
 st.set_page_config(
     page_title="EU AI Auditor",
@@ -186,6 +193,14 @@ with st.sidebar:
         fdr_alpha = st.select_slider(
             "Seuil FDR intersectionnel", options=[0.01, 0.05, 0.10], value=0.05
         )
+        max_stability_depth = st.number_input(
+            "Profondeur du multivers R",
+            min_value=1,
+            max_value=max(1, len(conditioning)),
+            value=min(2, max(1, len(conditioning))),
+            disabled=not conditioning,
+            help="Nombre maximal de facteurs R combinés dans une spécification.",
+        )
         low_proxy = st.slider("Seuil proxy moyen", 0.01, 0.50, 0.10, 0.01)
         high_proxy = st.slider("Seuil proxy haut", low_proxy + 0.01, 0.90, 0.30, 0.01)
         mean_quadrant = st.slider("Seuil impact moyen", 0.01, 0.30, 0.05, 0.01)
@@ -244,6 +259,21 @@ if run_audit:
             confidence_level=float(confidence_level),
             fdr_alpha=float(fdr_alpha),
         )
+        stability_result = (
+            calculate_fairness_stability(
+                dataset,
+                protected_attribute,
+                protected_value,
+                decision_attribute,
+                favourable_value,
+                conditioning,
+                max_conditioning_factors=min(int(max_stability_depth), len(conditioning)),
+                min_outcome_count=int(min_outcome_count),
+                materiality_threshold=float(materiality),
+            )
+            if conditioning
+            else None
+        )
         st.session_state["audit"] = {
             "signature": (
                 decision_attribute,
@@ -259,6 +289,7 @@ if run_audit:
                 float(confidence_level),
                 int(intersection_min_group_count),
                 float(fdr_alpha),
+                int(max_stability_depth),
                 float(low_proxy),
                 float(high_proxy),
                 float(mean_quadrant),
@@ -269,6 +300,7 @@ if run_audit:
             "proxy": proxy_result,
             "quadrant": quadrant_result,
             "intersectional": intersectional_result,
+            "stability": stability_result,
             "tradeoff": None,
         }
         st.session_state.pop("research_crate", None)
@@ -297,6 +329,7 @@ current_signature = (
     float(confidence_level),
     int(intersection_min_group_count),
     float(fdr_alpha),
+    int(max_stability_depth),
     float(low_proxy),
     float(high_proxy),
     float(mean_quadrant),
@@ -311,6 +344,7 @@ cdd_result = audit["cdd"]
 proxy_result = audit["proxy"]
 quadrant_result = audit["quadrant"]
 intersectional_result = audit["intersectional"]
+stability_result = audit["stability"]
 
 tabs = st.tabs(
     [
@@ -322,6 +356,7 @@ tabs = st.tabs(
         "Performance",
         "Rapport",
         "Recherche",
+        "Stabilité R",
     ]
 )
 
@@ -511,6 +546,7 @@ with tabs[6]:
                 quadrant_result=quadrant_result,
                 tradeoff_result=audit.get("tradeoff"),
                 intersectional_result=intersectional_result,
+                stability_result=stability_result,
                 metadata=metadata,
             )
             metadata["audit_id"] = prebundle["audit_id"]
@@ -521,6 +557,7 @@ with tabs[6]:
                 quadrant_result=quadrant_result,
                 tradeoff_result=audit.get("tradeoff"),
                 intersectional_result=intersectional_result,
+                stability_result=stability_result,
                 metadata=metadata,
             )
             st.download_button(
@@ -537,6 +574,7 @@ with tabs[6]:
                 quadrant_result=quadrant_result,
                 tradeoff_result=audit.get("tradeoff"),
                 intersectional_result=intersectional_result,
+                stability_result=stability_result,
                 metadata=metadata,
                 report_bytes=pdf,
             )
@@ -576,6 +614,7 @@ with tabs[7]:
         "bootstrap_iterations": int(bootstrap_iterations),
         "confidence_level": float(confidence_level),
         "fdr_alpha": float(fdr_alpha),
+        "stability_max_factors": int(max_stability_depth),
     }
     st.download_button(
         "Télécharger la recette JSON",
@@ -592,6 +631,7 @@ with tabs[7]:
                 quadrant_result=quadrant_result,
                 tradeoff_result=audit.get("tradeoff"),
                 intersectional_result=intersectional_result,
+                stability_result=stability_result,
                 metadata={"system_name": research_title, "protected_attributes": protected_attributes},
             )
             research_crate = build_research_crate(
@@ -604,6 +644,14 @@ with tabs[7]:
                     "proxy_scores": proxy_result.scores,
                     "quadrants": quadrant_result.features,
                     "intersectional_groups": intersectional_result.groups,
+                    **(
+                        {
+                            "stability_specifications": stability_result.specifications,
+                            "stability_factor_effects": stability_result.factor_effects,
+                        }
+                        if stability_result is not None
+                        else {}
+                    ),
                     **(
                         {"tradeoff": audit["tradeoff"].points}
                         if audit.get("tradeoff") is not None
@@ -624,4 +672,35 @@ with tabs[7]:
             file_name="eu_ai_auditor_research_crate.zip",
             mime="application/zip",
             type="primary",
+        )
+
+with tabs[8]:
+    st.subheader("Robustesse de la conclusion aux choix de R")
+    if stability_result is None:
+        st.info(
+            "Sélectionnez au moins un facteur R légitime pour comparer plusieurs spécifications CDD."
+        )
+    else:
+        a, b, c, d = st.columns(4)
+        a.metric("Score de robustesse", f"{stability_result.robustness_score:.1%}")
+        b.metric("Consensus", f"{stability_result.dominant_share:.1%}")
+        c.metric("Couverture médiane", f"{stability_result.median_coverage:.1%}")
+        d.metric(
+            "Étendue CDD",
+            f"{stability_result.gap_min:.1%} à {stability_result.gap_max:.1%}",
+        )
+        if "sensible" in stability_result.status:
+            st.warning(stability_result.status)
+        else:
+            st.success(stability_result.status)
+        figure = stability_curve(stability_result)
+        st.pyplot(figure, width="content")
+        plt.close(figure)
+        st.subheader("Influence des facteurs")
+        st.dataframe(stability_result.factor_effects, width="stretch", hide_index=True)
+        with st.expander("Toutes les spécifications"):
+            st.dataframe(stability_result.specifications, width="stretch", hide_index=True)
+        st.caption(
+            "Tous les facteurs doivent être justifiés avant lecture. Ce diagnostic mesure la "
+            "sensibilité aux choix d'analyse; il ne prouve ni causalité ni conformité juridique."
         )

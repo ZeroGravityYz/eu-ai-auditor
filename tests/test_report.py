@@ -2,7 +2,12 @@ from io import BytesIO
 
 from pypdf import PdfReader
 
-from eu_ai_auditor import calculate_cdd, calculate_proxy_matrix, calculate_risk_quadrants
+from eu_ai_auditor import (
+    calculate_cdd,
+    calculate_fairness_stability,
+    calculate_proxy_matrix,
+    calculate_risk_quadrants,
+)
 from eu_ai_auditor.demo import make_demo_dataset
 from eu_ai_auditor.report_generator import generate_compliance_report
 
@@ -25,11 +30,22 @@ def test_report_is_readable_and_contains_guardrails():
         min_pairs=5,
     )
     quadrants = calculate_risk_quadrants(data, ["genre"], "selection", "Retenu")
+    stability = calculate_fairness_stability(
+        data,
+        "genre",
+        "Femme",
+        "selection",
+        "Retenu",
+        ["diplome", "anciennete_annees"],
+        max_conditioning_factors=2,
+        min_outcome_count=2,
+    )
     payload = generate_compliance_report(
         data,
         cdd,
         proxy,
         quadrant_result=quadrants,
+        stability_result=stability,
         metadata={
             "system_name": "Test recrutement",
             "provider_name": "Organisation test",
@@ -46,4 +62,5 @@ def test_report_is_readable_and_contains_guardrails():
     assert "Article 10" in text
     assert "ne constitue ni une certification" in text
     assert "Article 14" in text
-
+    assert "Robustesse multivers" in text
+    assert "Spécifications valides" in text

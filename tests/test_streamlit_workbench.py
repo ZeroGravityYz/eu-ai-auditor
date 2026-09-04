@@ -19,6 +19,7 @@ def test_research_workbench_runs_the_guided_demo_without_exceptions():
     metrics = {metric.label: metric.value for metric in app.metric}
     assert "CDD gap" in metrics
     assert "Eligible intersections" in metrics
+    assert "Robustness score" in metrics
     assert [button.label for button in app.get("download_button")] == ["Download audit recipe"]
 
 

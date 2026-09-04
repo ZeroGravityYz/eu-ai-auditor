@@ -39,5 +39,6 @@ def test_cli_creates_pdf_and_verifiable_manifest(tmp_path):
     bundle = json.loads(evidence.read_text(encoding="utf-8"))
     assert verify_evidence_bundle(bundle, report_bytes=pdf.read_bytes())["valid"] is True
     assert bundle["results"]["intersectional"] is not None
+    assert bundle["results"]["stability"]["summary"]["total_specifications"] == 2
     assert verify_research_crate(research.read_bytes())["valid"] is True
     assert verify_main([str(evidence), "--report", str(pdf)]) == 0

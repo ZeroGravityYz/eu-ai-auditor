@@ -16,6 +16,7 @@ from .models import (
     OversightResult,
     ProxyMatrixResult,
     QuadrantResult,
+    StabilityResult,
     TradeoffResult,
 )
 from .serialization import json_compatible
@@ -55,6 +56,7 @@ def _result_payload(
     quadrant_result: QuadrantResult | None,
     tradeoff_result: TradeoffResult | None,
     intersectional_result: IntersectionalResult | None,
+    stability_result: StabilityResult | None,
 ) -> dict[str, Any]:
     return {
         "cdd": cdd_result.summary(),
@@ -71,6 +73,15 @@ def _result_payload(
             if intersectional_result
             else None
         ),
+        "stability": (
+            {
+                "summary": stability_result.summary(),
+                "specifications": stability_result.specifications.to_dict(orient="records"),
+                "factor_effects": stability_result.factor_effects.to_dict(orient="records"),
+            }
+            if stability_result
+            else None
+        ),
     }
 
 
@@ -82,6 +93,7 @@ def build_evidence_bundle(
     quadrant_result: QuadrantResult | None = None,
     tradeoff_result: TradeoffResult | None = None,
     intersectional_result: IntersectionalResult | None = None,
+    stability_result: StabilityResult | None = None,
     metadata: dict[str, Any] | None = None,
     report_bytes: bytes | None = None,
     generated_at: str | None = None,
@@ -100,6 +112,7 @@ def build_evidence_bundle(
         quadrant_result,
         tradeoff_result,
         intersectional_result,
+        stability_result,
     )
     metadata = json_compatible(metadata)
     results = json_compatible(results)
@@ -114,6 +127,19 @@ def build_evidence_bundle(
             "materiality_threshold": cdd_result.materiality_threshold,
             "bootstrap_iterations": cdd_result.bootstrap_iterations,
             "confidence_level": cdd_result.confidence_level,
+            "stability": (
+                {
+                    "conditioning_candidates": list(
+                        stability_result.conditioning_candidates
+                    ),
+                    "max_conditioning_factors": stability_result.max_conditioning_factors,
+                    "consensus_threshold": stability_result.consensus_threshold,
+                    "minimum_coverage": stability_result.minimum_coverage,
+                    "minimum_valid_share": stability_result.minimum_valid_share,
+                }
+                if stability_result is not None
+                else None
+            ),
         },
         "system_name": metadata.get("system_name", "Système évalué"),
         "system_version": metadata.get("system_version", "À compléter"),

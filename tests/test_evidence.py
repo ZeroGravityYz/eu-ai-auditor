@@ -4,6 +4,7 @@ from eu_ai_auditor import (
     build_evidence_bundle,
     build_oversight_evidence_bundle,
     calculate_cdd,
+    calculate_fairness_stability,
     calculate_oversight_parity,
     calculate_proxy_matrix,
     calculate_risk_quadrants,
@@ -19,11 +20,21 @@ def _bundle(report: bytes = b"%PDF-test", signing_key: str | None = "secret"):
     cdd = calculate_cdd(data, "genre", "Femme", "selection", "Retenu", ["diplome"])
     proxy = calculate_proxy_matrix(data, ["genre"], ["age", "diplome"], min_pairs=5)
     quadrants = calculate_risk_quadrants(data, ["genre"], "selection", "Retenu")
+    stability = calculate_fairness_stability(
+        data,
+        "genre",
+        "Femme",
+        "selection",
+        "Retenu",
+        ["diplome"],
+        max_conditioning_factors=1,
+    )
     return data, build_evidence_bundle(
         data,
         cdd,
         proxy,
         quadrant_result=quadrants,
+        stability_result=stability,
         metadata={"system_name": "Test", "system_version": "1"},
         report_bytes=report,
         generated_at="2026-08-25T00:00:00+00:00",
@@ -42,6 +53,7 @@ def test_evidence_bundle_survives_json_roundtrip_and_verifies():
     assert result["report_valid"] is True
     assert result["hmac_valid"] is True
     assert restored["dataset"]["sha256"] == dataframe_sha256(data)
+    assert restored["results"]["stability"]["summary"]["total_specifications"] == 2
 
 
 def test_evidence_tampering_is_detected():

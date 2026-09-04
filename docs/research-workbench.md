@@ -8,7 +8,7 @@ The workflow is deliberately split into four layers:
 
 1. **Suggestion** — common English and French column names are recognized conservatively.
 2. **Human mapping** — the researcher confirms the outcome, protected attributes, protected value and conditioning variables.
-3. **Statistical audit** — CDD, proxy screening, representation, quadrants and intersectional analysis run from one immutable configuration signature.
+3. **Statistical audit** — CDD, proxy screening, representation, quadrants, intersectional analysis and the conditioning-factor multiverse run from one immutable configuration signature.
 4. **Research export** — the exact configuration and tidy results are packaged with provenance and integrity metadata.
 
 Schema inference does not use an LLM, external API or hidden classifier. It is a deterministic lexical and type-based assistant. A low-confidence role remains empty instead of being silently guessed.
@@ -28,6 +28,12 @@ For every observed combination of selected protected attributes, the engine repo
 Groups below `min_group_count` remain in the table but receive no p-value or q-value. This prevents a lack of power from being misreported as fairness. The worst-case gap is the difference between the highest and lowest eligible group rates.
 
 The tests are exploratory. Dependence between overlapping group-versus-rest comparisons, selection effects, missing protected attributes and construct validity still require expert review.
+
+## Specification stability
+
+Researchers can declare several defensible conditioning factors and a maximum specification depth. The workbench then displays every CDD specification, the dominant conclusion, median coverage, gap range and paired influence of each factor. The same tables are embedded in the evidence manifest and RO-Crate, so a headline score cannot be detached from the underlying choices.
+
+Candidate factors must be justified before running the audit. The module measures sensitivity to analytical choices; it does not decide legitimacy, optimize the choice of `R`, or make a causal or legal claim. See the [fairness multiverse specification](fairness-multiverse.md).
 
 ## RO-Crate export
 

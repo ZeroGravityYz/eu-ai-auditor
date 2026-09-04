@@ -5,7 +5,8 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .models import CDDResult, ProxyMatrixResult, QuadrantResult, TradeoffResult
+from .models import CDDResult, ProxyMatrixResult, QuadrantResult, StabilityResult, TradeoffResult
+from .stability import ADVERSE_MATERIAL, REVERSE_MATERIAL, WITHIN_MATERIALITY
 
 plt.switch_backend("Agg")
 
@@ -113,5 +114,42 @@ def tradeoff_chart(result: TradeoffResult):
     finite = result.points["fairness_cost"].replace([np.inf, -np.inf], np.nan).dropna()
     if not finite.empty:
         axis.set_xlim(left=max(0, float(finite.min()) - 0.01))
+    figure.tight_layout()
+    return figure
+
+
+def stability_curve(result: StabilityResult):
+    """Plot the specification curve and its conditioning-factor decision matrix."""
+
+    data = result.specifications[result.specifications["valid"]].sort_values("curve_rank")
+    factor_columns = [f"uses_{name}" for name in result.conditioning_candidates]
+    figure, (curve, decisions) = plt.subplots(
+        2,
+        1,
+        figsize=(8.2, max(4.8, 3.8 + 0.3 * len(factor_columns))),
+        gridspec_kw={"height_ratios": [3.2, max(1.0, 0.35 * len(factor_columns))]},
+        sharex=True,
+    )
+    palette = {
+        ADVERSE_MATERIAL: CORAL,
+        REVERSE_MATERIAL: TEAL,
+        WITHIN_MATERIALITY: GOLD,
+    }
+    colors = [palette.get(value, NAVY) for value in data["signal_class"]]
+    curve.plot(data["curve_rank"], data["gap"], color=MIST, linewidth=1.2, zorder=1)
+    curve.scatter(data["curve_rank"], data["gap"], color=colors, s=28, zorder=2)
+    curve.axhline(0, color=NAVY, linewidth=1)
+    curve.axhline(result.materiality_threshold, color=CORAL, linestyle="--", linewidth=1)
+    curve.axhline(-result.materiality_threshold, color=TEAL, linestyle="--", linewidth=1)
+    curve.set_ylabel("CDD D_R - A_R")
+    curve.set_title("Stabilité de la conclusion entre spécifications", color=NAVY, loc="left", weight="bold")
+    curve.grid(axis="y", alpha=0.2)
+
+    matrix = data[factor_columns].to_numpy(dtype=float).T
+    decisions.imshow(matrix, cmap="Blues", vmin=0, vmax=1, aspect="auto", interpolation="nearest")
+    decisions.set_yticks(range(len(result.conditioning_candidates)), result.conditioning_candidates)
+    decisions.set_xlabel("Spécifications classées par écart CDD")
+    decisions.set_xticks([])
+    decisions.set_ylabel("Facteurs R")
     figure.tight_layout()
     return figure

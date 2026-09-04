@@ -20,6 +20,7 @@ from .report_generator import generate_compliance_report
 from .research_bundle import build_research_crate
 from .risk_quadrants import calculate_risk_quadrants
 from .serialization import json_compatible
+from .stability import calculate_fairness_stability
 from .tradeoff import compare_models
 
 
@@ -58,6 +59,24 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--min-outcome-count", type=int, default=5)
     parser.add_argument("--bootstrap-iterations", type=int, default=250)
     parser.add_argument("--confidence-level", type=float, default=0.95)
+    parser.add_argument(
+        "--stability-max-factors",
+        type=int,
+        default=2,
+        help="Profondeur maximale du multivers des facteurs R",
+    )
+    parser.add_argument(
+        "--stability-consensus-threshold",
+        type=float,
+        default=0.80,
+        help="Part minimale de spécifications concordantes",
+    )
+    parser.add_argument(
+        "--stability-min-valid-share",
+        type=float,
+        default=0.80,
+        help="Part minimale de spécifications calculables",
+    )
     parser.add_argument(
         "--intersection-min-group-count",
         type=int,
@@ -125,6 +144,25 @@ def main(argv: list[str] | None = None) -> int:
         confidence_level=args.confidence_level,
         fdr_alpha=args.fdr_alpha,
     )
+    stability_result = (
+        calculate_fairness_stability(
+            data,
+            args.protected,
+            protected_value,
+            args.decision,
+            favourable_value,
+            args.condition,
+            max_conditioning_factors=min(
+                args.stability_max_factors, len(args.condition)
+            ),
+            min_outcome_count=args.min_outcome_count,
+            materiality_threshold=args.materiality_threshold,
+            consensus_threshold=args.stability_consensus_threshold,
+            minimum_valid_share=args.stability_min_valid_share,
+        )
+        if args.condition
+        else None
+    )
     tradeoff_result = None
     if args.with_tradeoff:
         tradeoff_result = compare_models(
@@ -150,6 +188,7 @@ def main(argv: list[str] | None = None) -> int:
         quadrant_result=quadrant_result,
         tradeoff_result=tradeoff_result,
         intersectional_result=intersectional_result,
+        stability_result=stability_result,
         metadata=metadata,
     )
     metadata["audit_id"] = prebundle["audit_id"]
@@ -160,6 +199,7 @@ def main(argv: list[str] | None = None) -> int:
         quadrant_result=quadrant_result,
         tradeoff_result=tradeoff_result,
         intersectional_result=intersectional_result,
+        stability_result=stability_result,
         metadata=metadata,
         output_path=args.output,
     )
@@ -177,6 +217,7 @@ def main(argv: list[str] | None = None) -> int:
         quadrant_result=quadrant_result,
         tradeoff_result=tradeoff_result,
         intersectional_result=intersectional_result,
+        stability_result=stability_result,
         metadata=metadata,
         report_bytes=pdf,
         signing_key=signing_key,
@@ -197,6 +238,19 @@ def main(argv: list[str] | None = None) -> int:
                 "summary": intersectional_result.summary(),
                 "groups": intersectional_result.groups.to_dict(orient="records"),
             },
+            "stability": (
+                {
+                    "summary": stability_result.summary(),
+                    "specifications": stability_result.specifications.to_dict(
+                        orient="records"
+                    ),
+                    "factor_effects": stability_result.factor_effects.to_dict(
+                        orient="records"
+                    ),
+                }
+                if stability_result is not None
+                else None
+            ),
             "tradeoff": tradeoff_result.points.to_dict(orient="records") if tradeoff_result else None,
         }
         args.json_output.parent.mkdir(parents=True, exist_ok=True)
@@ -221,6 +275,9 @@ def main(argv: list[str] | None = None) -> int:
                 "bootstrap_iterations": args.bootstrap_iterations,
                 "confidence_level": args.confidence_level,
                 "fdr_alpha": args.fdr_alpha,
+                "stability_max_factors": args.stability_max_factors,
+                "stability_consensus_threshold": args.stability_consensus_threshold,
+                "stability_min_valid_share": args.stability_min_valid_share,
             },
             tables={
                 "cdd_strata": cdd_result.strata,
@@ -228,13 +285,24 @@ def main(argv: list[str] | None = None) -> int:
                 "quadrants": quadrant_result.features,
                 "intersectional_groups": intersectional_result.groups,
                 **(
+                    {
+                        "stability_specifications": stability_result.specifications,
+                        "stability_factor_effects": stability_result.factor_effects,
+                    }
+                    if stability_result is not None
+                    else {}
+                ),
+                **(
                     {"tradeoff": tradeoff_result.points}
                     if tradeoff_result is not None
                     else {}
                 ),
             },
             title=f"EU AI Auditor research audit - {args.system_name}",
-            description="CDD, proxy, quadrant and intersectional fairness evidence.",
+            description=(
+                "CDD, proxy, quadrant, intersectional and specification-stability "
+                "fairness evidence."
+            ),
             include_source_data=args.include_source_data,
         )
         args.research_bundle.parent.mkdir(parents=True, exist_ok=True)

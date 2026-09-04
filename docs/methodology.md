@@ -75,13 +75,21 @@ La performance est l'exactitude équilibrée. Le coût d'équité est la valeur 
 
 La frontière rend l'arbitrage visible. Elle ne recommande aucun point et ne fixe aucune pondération entre les objectifs.
 
-## 6. Traçabilité et intégrité
+## 6. Multivers de stabilité des facteurs R
+
+L'analyse de stabilité exige une liste de facteurs candidats définie avant lecture des résultats. Elle calcule la CDD pour l'absence de conditionnement puis pour chaque sous-ensemble de facteurs jusqu'à la profondeur configurée. Chaque écart valide est classé comme signal défavorable matériel, signal inverse matériel ou écart sous le seuil choisi.
+
+Le consensus est la part de spécifications valides dans la classe dominante. Le score de robustesse multiplie ce consensus par la couverture médiane. Le statut robuste exige en plus qu'une part minimale des spécifications soit calculable. Pour chaque facteur, des comparaisons appariées avec/sans ce facteur mesurent le décalage de CDD et la fréquence de bascule de classe.
+
+Ce protocole adapte l'analyse multivers et les courbes de spécifications à la CDD. Il rend la dépendance aux choix de `R` visible mais ne décide pas quels facteurs sont légitimes. Il ne recherche jamais le sous-ensemble produisant le résultat souhaité. Voir la [spécification complète et ses garde-fous](fairness-multiverse.md).
+
+## 7. Traçabilité et intégrité
 
 Le manifeste versionné contient une empreinte du DataFrame construite à partir de l'ordre des colonnes, des types, de l'index et du hachage des valeurs. Le PDF est protégé par sa propre empreinte SHA-256. Le manifeste retire son bloc `integrity`, sérialise le reste en JSON canonique puis calcule son empreinte.
 
 Une clé fournie par l'opérateur peut ajouter un HMAC-SHA256. La clé n'est jamais écrite dans le manifeste. Cette méthode permet de détecter une altération et d'attester la possession d'un secret partagé ; elle ne remplace pas une signature électronique qualifiée, une infrastructure de clés publiques, un horodatage de confiance ou une politique de conservation.
 
-## 7. Objet de recherche portable
+## 8. Objet de recherche portable
 
 L'export de recherche assemble la configuration exacte, les résultats tabulaires, le manifeste de preuve, l'environnement logiciel et les métadonnées dans une archive ZIP structurée comme un RO-Crate 1.3. Un fichier Croissant 1.1 décrit le schéma du jeu de données et `CITATION.cff` rend le logiciel citable.
 
@@ -89,7 +97,7 @@ Les données sources sont absentes par défaut. Si l'opérateur choisit explicit
 
 Une empreinte ne garantit pas à elle seule l'authenticité, la confidentialité, l'archivage à long terme ou la reproductibilité sémantique. Le protocole permet surtout de détecter les divergences et de transmettre les choix d'audit sans dépendre de l'interface graphique.
 
-## 8. Menaces à la validité
+## 9. Menaces à la validité
 
 - choix inadéquat ou contestable des facteurs `R` ;
 - échantillons trop petits, non représentatifs ou avec données manquantes non aléatoires ;
@@ -101,3 +109,5 @@ Une empreinte ne garantit pas à elle seule l'authenticité, la confidentialité
 - dépendance du bootstrap à l'hypothèse que les lignes observées sont une approximation pertinente de la population auditée.
 - dépendance entre comparaisons intersectionnelles et inflation du risque d'erreur si plusieurs configurations sont explorées sans protocole préalable.
 - risque de réidentification lors de l'export de petits groupes, même lorsque les lignes sources ne sont pas incluses.
+- choix postérieur des facteurs `R` après observation des résultats, qui invalide la lecture confirmatoire du multivers.
+- consensus artificiel entre plusieurs spécifications partageant les mêmes erreurs de mesure ou hypothèses contestables.

@@ -1,6 +1,6 @@
 # EU AI Auditor
 
-> [English documentation](docs/README.en.md) · [Research workflow](docs/research-workbench.md) · [Scientific methodology](docs/methodology.md)
+> [English documentation](docs/README.en.md) · [Research workflow](docs/research-workbench.md) · [Fairness multiverse](docs/fairness-multiverse.md) · [Scientific methodology](docs/methodology.md)
 
 [![CI](https://github.com/ZeroGravityYz/eu-ai-auditor/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroGravityYz/eu-ai-auditor/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-0F766E)](https://www.python.org/)
@@ -16,9 +16,10 @@ Le parcours classique comprend :
 - la disparité démographique conditionnelle (CDD) proposée comme mesure descriptive par Wachter, Mittelstadt et Russell ;
 - une matrice de risque de proxys inspirée de l'approche présentée par Deloitte ;
 - les quadrants d'impact des variables protégées ;
+- la robustesse multivers de la conclusion CDD face aux choix défendables de facteurs `R` ;
 - une frontière performance-équité comparant régression logistique et arbre CART.
 
-Depuis la version 0.4, le projet ajoute un laboratoire bilingue, une configuration assistée, l'analyse intersectionnelle avec correction des comparaisons multiples et des paquets de recherche RO-Crate vérifiables. OversightParity mesure toujours le transfert de disparité entre le modèle et l'humain, les corrections utiles et erreurs introduites, l'influence différentielle de l'assistance IA, ainsi que l'équité de l'accès au recours.
+La version 0.5 ajoute une analyse de sensibilité multivers : au lieu de présenter une seule CDD comme inévitable, elle recalcule toutes les spécifications pré-déclarées, mesure leur consensus et identifie les facteurs qui font basculer la conclusion. La version 0.4 avait introduit le laboratoire bilingue, l'analyse intersectionnelle et les paquets de recherche RO-Crate vérifiables. OversightParity mesure toujours le transfert de disparité entre le modèle et l'humain, les corrections utiles et erreurs introduites, l'influence différentielle de l'assistance IA, ainsi que l'équité de l'accès au recours.
 
 Le rapport PDF organise les résultats comme éléments de travail pour les articles 10, 11, 13 et 14 du règlement (UE) 2024/1689. Il ne certifie pas la conformité et ne remplace ni l'analyse juridique, ni l'évaluation des risques, ni la gouvernance interne.
 
@@ -114,7 +115,11 @@ Voir [la spécification scientifique et le schéma d'événements](docs/oversigh
 
 ```python
 import pandas as pd
-from eu_ai_auditor import calculate_cdd, calculate_proxy_matrix
+from eu_ai_auditor import (
+    calculate_cdd,
+    calculate_fairness_stability,
+    calculate_proxy_matrix,
+)
 
 data = pd.read_csv("decisions.csv")
 
@@ -140,6 +145,18 @@ proxies = calculate_proxy_matrix(
     candidate_features=["code_postal", "profession", "revenu"],
 )
 print(proxies.scores)
+
+stability = calculate_fairness_stability(
+    data,
+    protected_attribute="genre",
+    protected_value="Femme",
+    decision_attribute="selection",
+    favourable_value="Retenu",
+    conditioning_candidates=["diplome", "anciennete"],
+    max_conditioning_factors=2,
+)
+print(stability.summary())
+print(stability.factor_effects)
 ```
 
 ## Utilisation en ligne de commande
@@ -152,6 +169,7 @@ eu-ai-auditor data/recrutement_demo.csv \
   --favourable-value Retenu \
   --condition diplome \
   --condition anciennete_annees \
+  --stability-max-factors 2 \
   --with-tradeoff \
   --bootstrap-iterations 250 \
   --output output/pdf/rapport_audit.pdf \

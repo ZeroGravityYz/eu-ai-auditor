@@ -29,9 +29,16 @@ from reportlab.platypus import (
 
 from .data_quality import profile_dataset
 from .evidence import dataframe_sha256
-from .models import CDDResult, IntersectionalResult, ProxyMatrixResult, QuadrantResult, TradeoffResult
+from .models import (
+    CDDResult,
+    IntersectionalResult,
+    ProxyMatrixResult,
+    QuadrantResult,
+    StabilityResult,
+    TradeoffResult,
+)
 from .version import __version__
-from .visuals import cdd_strata_chart, proxy_heatmap, quadrant_chart, tradeoff_chart
+from .visuals import cdd_strata_chart, proxy_heatmap, quadrant_chart, stability_curve, tradeoff_chart
 
 plt.switch_backend("Agg")
 
@@ -104,6 +111,14 @@ def _styles() -> dict[str, ParagraphStyle]:
             leading=10,
             textColor=INK,
         ),
+        "table_header": ParagraphStyle(
+            "TableHeader",
+            parent=base["BodyText"],
+            fontName="Helvetica-Bold",
+            fontSize=7.4,
+            leading=10,
+            textColor=WHITE,
+        ),
         "metric": ParagraphStyle(
             "Metric",
             parent=base["Normal"],
@@ -151,7 +166,9 @@ def _dataframe_table(
 ) -> Table:
     columns = list(frame.columns)
     header_values = headers or columns
-    rows: list[list[Any]] = [[_p(value, styles["small"]) for value in header_values]]
+    rows: list[list[Any]] = [
+        [_p(value, styles["table_header"]) for value in header_values]
+    ]
     for _, row in frame.iterrows():
         rendered: list[Any] = []
         for column in columns:
@@ -198,12 +215,7 @@ def _figure_image(figure, width: float, height: float | None = None) -> Image:
 
 def _header_footer(canvas, document) -> None:
     canvas.saveState()
-    width, height = A4
-    canvas.setStrokeColor(MIST)
-    canvas.line(18 * mm, height - 15 * mm, width - 18 * mm, height - 15 * mm)
-    canvas.setFillColor(NAVY)
-    canvas.setFont("Helvetica-Bold", 7)
-    canvas.drawString(18 * mm, height - 11 * mm, "EU AI AUDITOR - DOSSIER DE PREUVES")
+    width, _ = A4
     canvas.setFillColor(colors.HexColor("#667788"))
     canvas.setFont("Helvetica", 7)
     canvas.drawRightString(width - 18 * mm, 10 * mm, f"Page {document.page}")
@@ -221,6 +233,14 @@ def _first_page(canvas, document) -> None:
     canvas.restoreState()
 
 
+class _AuditDocTemplate(SimpleDocTemplate):
+    """Draw recurring furniture after flowables so charts cannot cover it."""
+
+    def afterPage(self) -> None:
+        if self.page > 1:
+            _header_footer(self.canv, self)
+
+
 def generate_compliance_report(
     data: pd.DataFrame,
     cdd_result: CDDResult,
@@ -229,6 +249,7 @@ def generate_compliance_report(
     quadrant_result: QuadrantResult | None = None,
     tradeoff_result: TradeoffResult | None = None,
     intersectional_result: IntersectionalResult | None = None,
+    stability_result: StabilityResult | None = None,
     metadata: dict[str, Any] | None = None,
     output_path: str | Path | None = None,
 ) -> bytes:
@@ -244,7 +265,7 @@ def generate_compliance_report(
     quality = profile_dataset(data, protected)
     styles = _styles()
     stream = BytesIO()
-    document = SimpleDocTemplate(
+    document = _AuditDocTemplate(
         stream,
         pagesize=A4,
         rightMargin=18 * mm,
@@ -432,7 +453,7 @@ def generate_compliance_report(
             ]
         )
 
-    story.append(PageBreak())
+    story.extend([PageBreak(), Spacer(1, 14 * mm)])
     story.append(_p("4. CDD - Disparité démographique conditionnelle", styles["h1"]))
     story.append(
         _p(
@@ -474,9 +495,13 @@ def generate_compliance_report(
     story.append(_dataframe_table(cdd_summary, styles, widths=[69 * mm, 84 * mm]))
     eligible = cdd_result.strata[cdd_result.strata["eligible"]]
     if not eligible.empty:
-        story.extend([Spacer(1, 3 * mm), _figure_image(cdd_strata_chart(cdd_result), 150 * mm)])
+        story.extend(
+            [Spacer(1, 3 * mm), _figure_image(cdd_strata_chart(cdd_result), 110 * mm)]
+        )
         condition_columns = list(cdd_result.conditioning_attributes) or ["__population__"]
-        top = eligible.reindex(eligible["gap_D_minus_A"].abs().sort_values(ascending=False).index).head(12)
+        top = eligible.reindex(
+            eligible["gap_D_minus_A"].abs().sort_values(ascending=False).index
+        ).head(5)
         top = top[[*condition_columns, "n_total", "A_R", "D_R", "gap_D_minus_A"]]
         story.extend(
             [
@@ -487,6 +512,7 @@ def generate_compliance_report(
     for note in cdd_result.notes:
         story.append(_p("- " + note, styles["small"]))
 
+    story.extend([PageBreak(), Spacer(1, 14 * mm)])
     story.append(_p("5. Matrice des proxys", styles["h1"]))
     story.append(
         _p(
@@ -509,7 +535,7 @@ def generate_compliance_report(
     )
 
     if intersectional_result is not None:
-        story.append(PageBreak())
+        story.extend([PageBreak(), Spacer(1, 14 * mm)])
         story.append(_p("6. Analyse intersectionnelle", styles["h1"]))
         story.append(
             _p(
@@ -565,6 +591,7 @@ def generate_compliance_report(
         story.extend(
             [
                 PageBreak(),
+                Spacer(1, 14 * mm),
                 _p("6. Analyse intersectionnelle", styles["h1"]),
                 _p(
                     "Analyse non fournie pour cette exécution. Ajoutez tous les attributs protégés "
@@ -575,9 +602,76 @@ def generate_compliance_report(
             ]
         )
 
+    story.extend([PageBreak(), Spacer(1, 14 * mm)])
+    story.append(_p("7. Robustesse multivers des choix R", styles["h1"]))
+    if stability_result is not None:
+        story.append(
+            _p(
+                "Cette analyse répète le calcul CDD sur toutes les combinaisons autorisées de facteurs "
+                "R, de l'absence de conditionnement jusqu'à la profondeur configurée. Elle montre si "
+                "la conclusion descriptive dépend d'un choix d'analyste plausible. Les facteurs doivent "
+                "avoir été justifiés avant l'analyse; l'outil ne sélectionne jamais R pour obtenir un "
+                "résultat favorable et n'établit ni causalité ni conformité juridique.",
+                styles["body"],
+            )
+        )
+        stability_summary = pd.DataFrame(
+            [
+                ["Facteurs R candidats", ", ".join(stability_result.conditioning_candidates)],
+                [
+                    "Spécifications valides",
+                    f"{stability_result.valid_specifications}/{stability_result.total_specifications}",
+                ],
+                ["Part de spécifications valides", _format_percent(stability_result.valid_share)],
+                ["Conclusion dominante", stability_result.dominant_class],
+                ["Consensus", _format_percent(stability_result.dominant_share)],
+                ["Couverture médiane", _format_percent(stability_result.median_coverage)],
+                ["Score de robustesse", _format_percent(stability_result.robustness_score)],
+                [
+                    "Étendue des écarts CDD",
+                    f"[{_format_percent(stability_result.gap_min)} ; "
+                    f"{_format_percent(stability_result.gap_max)}]",
+                ],
+                ["Traverse zéro", "Oui" if stability_result.range_crosses_zero else "Non"],
+                ["Statut", stability_result.status],
+            ],
+            columns=["Mesure", "Valeur"],
+        )
+        story.append(_dataframe_table(stability_summary, styles, widths=[58 * mm, 95 * mm]))
+        story.append(_figure_image(stability_curve(stability_result), 150 * mm))
+        effects = stability_result.factor_effects.head(12)[
+            [
+                "factor",
+                "paired_comparisons",
+                "median_shift",
+                "median_absolute_shift",
+                "maximum_absolute_shift",
+                "class_flip_rate",
+            ]
+        ]
+        story.extend(
+            [
+                _p("Sensibilité associée à chaque facteur", styles["h2"]),
+                _dataframe_table(
+                    effects,
+                    styles,
+                    headers=["Facteur", "Paires", "Décalage", "|Décalage|", "Maximum", "Bascule"],
+                ),
+            ]
+        )
+    else:
+        story.append(
+            _p(
+                "Analyse non fournie pour cette exécution. Quand plusieurs facteurs R peuvent être "
+                "raisonnablement défendus, documentez-les avant de relancer le multivers afin de ne pas "
+                "présenter une conclusion dépendante d'une seule spécification.",
+                styles["body"],
+            )
+        )
+
     if quadrant_result is not None:
-        story.append(PageBreak())
-        story.append(_p("7. Quadrants d'impact", styles["h1"]))
+        story.extend([PageBreak(), Spacer(1, 14 * mm)])
+        story.append(_p("8. Quadrants d'impact", styles["h1"]))
         story.append(
             _p(
                 "L'écart de résultat d'un sous-groupe est son taux d'issue favorable moins le taux de la "
@@ -600,7 +694,7 @@ def generate_compliance_report(
         story.append(
             KeepTogether(
                 [
-                    _p("8. Arbitrage performance - équité", styles["h1"]),
+                    _p("9. Arbitrage performance - équité", styles["h1"]),
                     _p(
                 "Chaque point provient d'un échantillon de test distinct de l'entraînement. La frontière "
                 "de Pareto montre les points qu'aucun autre point ne surpasse simultanément en exactitude "
@@ -625,7 +719,7 @@ def generate_compliance_report(
     else:
         story.extend(
             [
-                _p("8. Arbitrage performance - équité", styles["h1"]),
+                _p("9. Arbitrage performance - équité", styles["h1"]),
                 _p(
                     "Comparaison LR/CART non demandée pour cette exécution. Aucun compromis entre "
                     "performance prédictive et coût d'équité n'est donc présenté dans ce dossier.",
@@ -634,8 +728,8 @@ def generate_compliance_report(
             ]
         )
 
-    story.append(PageBreak())
-    story.append(_p("9. Article 11 et annexe IV - État du dossier", styles["h1"]))
+    story.extend([PageBreak(), Spacer(1, 14 * mm)])
+    story.append(_p("10. Article 11 et annexe IV - État du dossier", styles["h1"]))
     checklist = [
         ("Description générale, finalité, fournisseur, version", ["system_name", "intended_purpose", "provider_name", "system_version"]),
         ("Architecture, composants, ressources et interfaces", ["architecture"]),
@@ -668,7 +762,7 @@ def generate_compliance_report(
         )
     )
 
-    story.append(_p("10. Article 13 - Transparence et instructions d'utilisation", styles["h1"]))
+    story.append(_p("11. Article 13 - Transparence et instructions d'utilisation", styles["h1"]))
     transparency_rows = pd.DataFrame(
         [
             ["Finalité prévue", metadata.get("intended_purpose", "À compléter")],
@@ -682,7 +776,7 @@ def generate_compliance_report(
     )
     story.append(_dataframe_table(transparency_rows, styles, widths=[52 * mm, 101 * mm]))
 
-    story.append(_p("11. Article 14 - Supervision humaine", styles["h1"]))
+    story.append(_p("12. Article 14 - Supervision humaine", styles["h1"]))
     oversight = metadata.get("human_oversight", "À compléter: rôles, compétences, autorité et disponibilité du superviseur.")
     story.append(_p(str(oversight), styles["body"]))
     for action in [
@@ -694,8 +788,8 @@ def generate_compliance_report(
     ]:
         story.append(_p("- " + action, styles["body"]))
 
-    story.append(PageBreak())
-    story.append(_p("12. Annexe - Limites, références et validation", styles["h1"]))
+    story.extend([PageBreak(), Spacer(1, 14 * mm)])
+    story.append(_p("13. Annexe - Limites, références et validation", styles["h1"]))
     for limitation in [
         "CDD ne détermine ni l'illégalité d'un écart, ni sa justification, ni sa causalité.",
         "Les facteurs R et les groupes comparateurs impliquent des choix juridiques et contextuels.",
@@ -707,6 +801,8 @@ def generate_compliance_report(
     references = [
         "Règlement (UE) 2024/1689, articles 10, 11, 13, 14 et annexe IV: https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
         "Wachter, Mittelstadt et Russell, Why Fairness Cannot Be Automated, 2020: https://arxiv.org/abs/2005.05906",
+        "Simonsohn, Simmons et Nelson, Specification Curve Analysis, 2020: https://doi.org/10.1038/s41562-020-0912-z",
+        "NIST AI RMF 1.0, mesures robustes et documentation de l'incertitude: https://doi.org/10.6028/NIST.AI.100-1",
         "Deloitte, Striving for fairness in AI models, 2021: https://www.deloitte.com/content/dam/assets-zone2/de/de/docs/products/2024/Deloitte_Trustworthy20AI_Fairness_Whitepaper_Dec2021.pdf",
     ]
     for reference in references:
@@ -750,7 +846,7 @@ def generate_compliance_report(
         ]
     )
 
-    document.build(story, onFirstPage=_first_page, onLaterPages=_header_footer)
+    document.build(story, onFirstPage=_first_page)
     pdf_bytes = stream.getvalue()
     if output_path is not None:
         path = Path(output_path)

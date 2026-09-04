@@ -202,3 +202,61 @@ class IntersectionalResult:
             "status": self.status,
             "notes": list(self.notes),
         }
+
+
+@dataclass(frozen=True)
+class StabilityResult:
+    """Sensitivity of a CDD conclusion across defensible conditioning choices."""
+
+    protected_attribute: str
+    protected_value: Any
+    decision_attribute: str
+    favourable_value: Any
+    conditioning_candidates: tuple[str, ...]
+    max_conditioning_factors: int
+    materiality_threshold: float
+    consensus_threshold: float
+    minimum_coverage: float
+    minimum_valid_share: float
+    specifications: pd.DataFrame
+    factor_effects: pd.DataFrame
+    total_specifications: int
+    valid_specifications: int
+    valid_share: float
+    dominant_class: str
+    dominant_share: float
+    robustness_score: float
+    median_coverage: float
+    gap_min: float
+    gap_median: float
+    gap_max: float
+    range_crosses_zero: bool
+    status: str
+    notes: tuple[str, ...] = ()
+
+    def summary(self) -> dict[str, Any]:
+        return {
+            "protected_attribute": self.protected_attribute,
+            "protected_value": self.protected_value,
+            "decision_attribute": self.decision_attribute,
+            "favourable_value": self.favourable_value,
+            "conditioning_candidates": list(self.conditioning_candidates),
+            "max_conditioning_factors": self.max_conditioning_factors,
+            "materiality_threshold": self.materiality_threshold,
+            "consensus_threshold": self.consensus_threshold,
+            "minimum_coverage": self.minimum_coverage,
+            "minimum_valid_share": self.minimum_valid_share,
+            "total_specifications": self.total_specifications,
+            "valid_specifications": self.valid_specifications,
+            "valid_share": self.valid_share,
+            "dominant_class": self.dominant_class,
+            "dominant_share": self.dominant_share,
+            "robustness_score": self.robustness_score,
+            "median_coverage": self.median_coverage,
+            "gap_min": self.gap_min,
+            "gap_median": self.gap_median,
+            "gap_max": self.gap_max,
+            "range_crosses_zero": self.range_crosses_zero,
+            "status": self.status,
+            "notes": list(self.notes),
+        }

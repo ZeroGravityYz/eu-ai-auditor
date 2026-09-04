@@ -2,6 +2,22 @@
 
 Toutes les modifications importantes du projet sont consignées ici.
 
+## 0.5.0 — 2026-09-05
+
+### Ajouté
+
+- Analyse multivers de la CDD sur toutes les combinaisons pré-déclarées de facteurs `R` jusqu'à une profondeur bornée.
+- Courbe de spécifications reliée à une matrice visuelle d'inclusion des facteurs.
+- Score de robustesse combinant consensus de conclusion et couverture médiane, avec contrôle séparé de la part de spécifications calculables.
+- Mesure de l'influence de chaque facteur : décalage médian, amplitude maximale et fréquence de bascule de conclusion.
+- Résultats de stabilité dans Streamlit, le Research Workbench bilingue, le CLI, le PDF, le manifeste JSON et le RO-Crate.
+
+### Garde-fous
+
+- Les facteurs candidats doivent être justifiés et déclarés avant interprétation ; aucun facteur n'est optimisé en fonction du résultat souhaité.
+- L'univers est limité à 256 spécifications pour éviter une exploration incontrôlée.
+- La robustesse de la conclusion d'audit n'est présentée ni comme une preuve de causalité, ni comme la robustesse technique du système au sens de l'article 15, ni comme un verdict juridique.
+
 ## 0.4.0 — 2026-09-05
 
 ### Ajouté

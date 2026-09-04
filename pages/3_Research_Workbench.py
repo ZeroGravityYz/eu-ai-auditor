@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 
@@ -11,6 +12,7 @@ from eu_ai_auditor import (
     build_evidence_bundle,
     build_research_crate,
     calculate_cdd,
+    calculate_fairness_stability,
     calculate_intersectional_parity,
     calculate_proxy_matrix,
     calculate_risk_quadrants,
@@ -20,6 +22,7 @@ from eu_ai_auditor import (
 )
 from eu_ai_auditor.demo import make_demo_dataset
 from eu_ai_auditor.serialization import json_compatible
+from eu_ai_auditor.visuals import stability_curve
 
 st.set_page_config(page_title="Research Workbench", page_icon="🌍", layout="wide")
 
@@ -48,6 +51,7 @@ TEXT = {
         "confidence": "Confidence level",
         "materiality": "Materiality review threshold",
         "fdr": "False-discovery-rate threshold",
+        "depth": "Maximum conditioning factors per specification",
         "run": "Run reproducible audit",
         "suggestions": "Automatic mapping suggestions",
         "verify": "Suggestions use names and types only. Verify every normative choice.",
@@ -57,12 +61,21 @@ TEXT = {
         "launch": "Review the mapping, then run the audit.",
         "summary": "Summary",
         "intersections": "Intersections",
+        "stability": "Specification stability",
         "reproducibility": "Reproducibility",
         "cdd": "CDD gap",
         "coverage": "CDD coverage",
         "groups": "Eligible intersections",
         "priorities": "FDR priorities",
         "worst": "Worst-case gap",
+        "robustness": "Robustness score",
+        "consensus": "Dominant conclusion",
+        "gap_range": "CDD range",
+        "no_stability": "Select at least one defensible R factor to compare specifications.",
+        "stability_note": (
+            "Justify every candidate factor before reading the results. This diagnoses analyst-choice "
+            "sensitivity; it is not a causal or legal conclusion."
+        ),
         "quality": "Data quality",
         "no_warning": "No automatic data-quality warning at the configured thresholds.",
         "small_groups": (
@@ -107,6 +120,7 @@ TEXT = {
         "confidence": "Niveau de confiance",
         "materiality": "Seuil matériel de revue",
         "fdr": "Seuil du taux de fausses découvertes",
+        "depth": "Nombre maximal de facteurs par spécification",
         "run": "Lancer l'audit reproductible",
         "suggestions": "Suggestions de correspondance automatique",
         "verify": "Les suggestions utilisent seulement les noms et types. Vérifiez chaque choix normatif.",
@@ -116,12 +130,21 @@ TEXT = {
         "launch": "Vérifiez la correspondance puis lancez l'audit.",
         "summary": "Synthèse",
         "intersections": "Intersections",
+        "stability": "Stabilité des spécifications",
         "reproducibility": "Reproductibilité",
         "cdd": "Écart CDD",
         "coverage": "Couverture CDD",
         "groups": "Intersections éligibles",
         "priorities": "Priorités après FDR",
         "worst": "Écart pire cas",
+        "robustness": "Score de robustesse",
+        "consensus": "Conclusion dominante",
+        "gap_range": "Étendue CDD",
+        "no_stability": "Sélectionnez au moins un facteur R défendable pour comparer les spécifications.",
+        "stability_note": (
+            "Justifiez chaque facteur candidat avant lecture. Ce diagnostic mesure la sensibilité aux "
+            "choix d'analyse; ce n'est pas une conclusion causale ou juridique."
+        ),
         "quality": "Qualité des données",
         "no_warning": "Aucun avertissement automatique de qualité aux seuils configurés.",
         "small_groups": (
@@ -227,6 +250,13 @@ with st.sidebar:
         confidence = st.select_slider(t["confidence"], options=[0.90, 0.95, 0.99], value=0.95)
         materiality = st.slider(t["materiality"], 0.0, 0.30, 0.05, 0.01)
         fdr_alpha = st.select_slider(t["fdr"], options=[0.01, 0.05, 0.10], value=0.05)
+        max_stability_depth = st.number_input(
+            t["depth"],
+            min_value=1,
+            max_value=max(1, len(conditioning)),
+            value=min(2, max(1, len(conditioning))),
+            disabled=not conditioning,
+        )
     with st.expander(t["suggestions"]):
         st.json(inference.summary())
         st.caption(t["verify"])
@@ -250,6 +280,7 @@ signature = (
     float(confidence),
     float(materiality),
     float(fdr_alpha),
+    int(max_stability_depth),
 )
 if run:
     try:
@@ -280,6 +311,23 @@ if run:
             candidates = [column for column in columns if column not in {*protected, decision}]
             proxies = calculate_proxy_matrix(data, protected, candidates, min_pairs=max(5, int(min_group)))
             quadrants = calculate_risk_quadrants(data, protected, decision, favourable)
+            stability = (
+                calculate_fairness_stability(
+                    data,
+                    protected[0],
+                    primary_group,
+                    decision,
+                    favourable,
+                    conditioning,
+                    max_conditioning_factors=min(
+                        int(max_stability_depth), len(conditioning)
+                    ),
+                    min_outcome_count=max(2, min(int(min_group), 20)),
+                    materiality_threshold=float(materiality),
+                )
+                if conditioning
+                else None
+            )
         st.session_state["research_workbench"] = {
             "signature": signature,
             "cdd": cdd,
@@ -287,6 +335,7 @@ if run:
             "quality": quality,
             "proxies": proxies,
             "quadrants": quadrants,
+            "stability": stability,
         }
         st.session_state.pop("workbench_crate", None)
     except ValueError as exc:
@@ -305,8 +354,9 @@ intersections = audit["intersections"]
 quality = audit["quality"]
 proxies = audit["proxies"]
 quadrants = audit["quadrants"]
-summary_tab, intersections_tab, reproducibility_tab = st.tabs(
-    [t["summary"], t["intersections"], t["reproducibility"]]
+stability = audit["stability"]
+summary_tab, intersections_tab, stability_tab, reproducibility_tab = st.tabs(
+    [t["summary"], t["intersections"], t["stability"], t["reproducibility"]]
 )
 
 with summary_tab:
@@ -330,6 +380,26 @@ with intersections_tab:
     st.dataframe(intersections.groups, width="stretch", hide_index=True)
     st.caption(t["small_groups"])
 
+with stability_tab:
+    if stability is None:
+        st.info(t["no_stability"])
+    else:
+        a, b, c = st.columns(3)
+        a.metric(t["robustness"], f"{stability.robustness_score:.1%}")
+        b.metric(t["consensus"], f"{stability.dominant_share:.1%}")
+        c.metric(t["gap_range"], f"{stability.gap_min:.1%} to {stability.gap_max:.1%}")
+        if "sensible" in stability.status:
+            st.warning(stability.status)
+        else:
+            st.success(stability.status)
+        figure = stability_curve(stability)
+        st.pyplot(figure, width="content")
+        plt.close(figure)
+        st.dataframe(stability.factor_effects, width="stretch", hide_index=True)
+        with st.expander("All specifications / Toutes les spécifications"):
+            st.dataframe(stability.specifications, width="stretch", hide_index=True)
+        st.caption(t["stability_note"])
+
 with reproducibility_tab:
     st.subheader(t["crate"])
     st.write(t["crate_help"])
@@ -348,6 +418,7 @@ with reproducibility_tab:
         "confidence_level": float(confidence),
         "materiality_threshold": float(materiality),
         "fdr_alpha": float(fdr_alpha),
+        "stability_max_factors": int(max_stability_depth),
     }
     st.download_button(
         t["recipe"],
@@ -362,6 +433,7 @@ with reproducibility_tab:
             proxies,
             quadrant_result=quadrants,
             intersectional_result=intersections,
+            stability_result=stability,
             metadata={"system_name": crate_title, "protected_attributes": protected},
         )
         st.session_state["workbench_crate"] = build_research_crate(
@@ -374,6 +446,14 @@ with reproducibility_tab:
                 "intersectional_groups": intersections.groups,
                 "proxy_scores": proxies.scores,
                 "quadrants": quadrants.features,
+                **(
+                    {
+                        "stability_specifications": stability.specifications,
+                        "stability_factor_effects": stability.factor_effects,
+                    }
+                    if stability is not None
+                    else {}
+                ),
             },
             title=crate_title,
             creators=[creator],

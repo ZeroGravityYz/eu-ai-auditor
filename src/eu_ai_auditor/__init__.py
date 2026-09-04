@@ -16,6 +16,7 @@ from .models import (
     OversightResult,
     ProxyMatrixResult,
     QuadrantResult,
+    StabilityResult,
     TradeoffResult,
 )
 from .oversight import calculate_oversight_parity, oversight_parity
@@ -23,6 +24,7 @@ from .proxy_matrix import association_score, calculate_proxy_matrix
 from .research_bundle import build_research_crate, verify_research_crate
 from .risk_quadrants import calculate_risk_quadrants
 from .schema_inference import SchemaInference, infer_audit_schema
+from .stability import calculate_fairness_stability, fairness_stability
 from .tradeoff import compare_models
 from .version import __version__
 
@@ -32,12 +34,14 @@ __all__ = [
     "OversightResult",
     "ProxyMatrixResult",
     "QuadrantResult",
+    "StabilityResult",
     "TradeoffResult",
     "association_score",
     "build_evidence_bundle",
     "build_oversight_evidence_bundle",
     "build_research_crate",
     "calculate_cdd",
+    "calculate_fairness_stability",
     "calculate_intersectional_parity",
     "calculate_oversight_parity",
     "calculate_proxy_matrix",
@@ -45,6 +49,7 @@ __all__ = [
     "cdd",
     "compare_models",
     "dataframe_sha256",
+    "fairness_stability",
     "infer_audit_schema",
     "intersectional_parity",
     "oversight_parity",

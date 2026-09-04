@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use EU AI Auditor in research or practice, please cite the software and the archived version."
 title: "EU AI Auditor"
 type: software
-version: 0.4.0
+version: 0.5.0
 date-released: 2026-09-05
 authors:
   - name: "EU AI Auditor contributors"
@@ -14,4 +14,5 @@ keywords:
   - AI Act
   - human oversight
   - intersectionality
+  - multiverse analysis
   - research reproducibility
